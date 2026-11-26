@@ -1,7 +1,7 @@
 test_that("all and IP case code reports share one query and aggregate independently", {
   fixture <- codeSummaryFilteredFixture()
   calls <- 0L
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -56,7 +56,7 @@ test_that("all and IP case code reports share one query and aggregate independen
 test_that("disabled or unavailable scope metadata never falls back to unfiltered data", {
   fixture <- codeSummaryFilteredFixture()
   fixture$config$filtered_scope_sheet_names <- character()
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -66,11 +66,11 @@ test_that("disabled or unavailable scope metadata never falls back to unfiltered
   )
   expect_null(attr(reports, "filtered_reports", exact = TRUE))
   fixture$config$filtered_scope_sheet_names <- "FHIR"
-  expect_warning(reports <- createCodeSummaryReports(
+  expect_warning(reports <- createCodeSummaryFixtureReports(
     fixture$metadata[TABLE_NAME != "pids_per_ward"], fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
-  ), "Filtered code export skipped")
+  ), "INTERPOLAR code report skipped")
   expect_null(attr(reports, "filtered_reports", exact = TRUE))
   expect_equal(reports$Observation[row_type == "total", count], 14)
 })
@@ -78,7 +78,7 @@ test_that("disabled or unavailable scope metadata never falls back to unfiltered
 test_that("an empty IP selection yields header-only reports with no false zero totals", {
   fixture <- codeSummaryFilteredFixture()
   fixture$extra_sql <- c(fixture$extra_sql, "DELETE FROM pids_per_ward;")
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -95,7 +95,7 @@ test_that("scope case references use the same whitespace normalization as events
     fixture$extra_sql,
     "UPDATE encounter SET enc_main_encounter_calculated_ref=' Encounter/e2 ' WHERE enc_id IN ('ward1','ward2');"
   )
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -106,7 +106,7 @@ test_that("scope case references use the same whitespace normalization as events
 
 test_that("missing resource case fields never fall back to the IP patient cohort", {
   fixture <- codeSummaryFilteredFixture()
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata[COLUMN_NAME != "obs_encounter_calculated_ref"], fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -119,7 +119,7 @@ test_that("missing resource case fields never fall back to the IP patient cohort
 
 test_that("one archive contains separate CSVs for complete database and IP cases", {
   fixture <- codeSummaryFilteredFixture()
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)

@@ -1,6 +1,6 @@
 test_that("restricted sources discard measurements before materialization, casting and range grouping", {
   fixture <- codeSummaryAgeFixture()
-  fixture$config$code_summary_exports$variants <- "filtered_age_ge18"
+  fixture$config$code_summary_exports$variants <- "interpolar_cases"
   fixture$metadata[COLUMN_NAME == "obs_value", DATA_TYPE := "text"]
   fixture$config$code_summary_sources[[1]]$measurement <- TRUE
   fixture$extra_sql <- c(
@@ -8,7 +8,7 @@ test_that("restricted sources discard measurements before materialization, casti
     "INSERT INTO observation (obs_id,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value) VALUES ('excluded-value','Encounter/e1','http://loinc.org','excluded','not numeric');"
   )
   stages <- NULL
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  reports <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       # Query the actual SQL stages, rather than just checking for a WHERE string.
@@ -24,7 +24,7 @@ test_that("restricted sources discard measurements before materialization, casti
   )
   expect_equal(stages[stage == "source", n], 6)
   expect_equal(stages[stage == "normalized", n], 3)
-  local <- attr(attr(reports, "variant_reports")$filtered_age_ge18, "local_reports")$Observation
+  local <- attr(attr(reports, "variant_reports")$interpolar_cases, "local_reports")$Observation
   expect_setequal(local[row_type == "detail", code], c("common", "age-check"))
   expect_equal(local[row_type == "total", count], 3)
 })
@@ -43,25 +43,25 @@ test_that("restricted reports retain global medication identities and diagnostic
     "INSERT INTO medication (med_id,med_code_system,med_code_code,med_case) VALUES ('cross-med','http://fhir.de/CodeSystem/bfarm/atc','cross-code',NULL),('outside-ref','http://fhir.de/CodeSystem/bfarm/atc','outside-reference','Encounter/e2');",
     "INSERT INTO medicationrequest (medreq_id,medreq_encounter_calculated_ref,medreq_medicationreference_ref,medreq_direct_system,medreq_direct_code) VALUES ('cross-usage','Encounter/e2',NULL,'http://fhir.de/CodeSystem/bfarm/atc','cross-code'),('cross-usage','Encounter/e1','Medication/cross-med',NULL,NULL),('global-coded','Encounter/e2',NULL,NULL,NULL),('global-coded','Encounter/e1',NULL,'http://fhir.de/CodeSystem/bfarm/atc','outside-code'),('resolved-no-code','Encounter/e2','Medication/no-code',NULL,NULL),(NULL,'Encounter/e1','Medication/outside-ref',NULL,NULL);"
   )
-  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
   reference <- run()
-  for (selection in list("filtered_age_ge18", "filtered", c("all_age_lt18", "filtered_age_ge18"))) {
+  for (selection in list("interpolar_cases", "all_cases")) {
     fixture$config$code_summary_exports$variants <- selection
     for (batching in c("all", "resource")) {
       fixture$config$code_summary_query_batching <- batching
       actual <- run()
       for (variant in selection) {
-        expected <- if (variant == "filtered") attr(reference, "filtered_reports") else attr(reference, "variant_reports")[[variant]]
-        selected <- if (variant == "filtered") attr(actual, "filtered_reports") else attr(actual, "variant_reports")[[variant]]
+        expected <- attr(reference, "variant_reports")[[variant]]
+        selected <- attr(actual, "variant_reports")[[variant]]
         expect_equal(lapply(selected, identity), lapply(expected, identity))
         expect_equal(lapply(attr(selected, "local_reports"), identity), lapply(attr(expected, "local_reports"), identity))
       }
     }
   }
-  adult <- attr(attr(reference, "variant_reports")$filtered_age_ge18, "local_reports")$Medication
+  adult <- attr(attr(reference, "variant_reports")$interpolar_cases, "local_reports")$Medication
   expect_equal(adult[row_type == "detail" & code == "cross-code", count], 2)
   expect_equal(adult[row_type == "detail" & code == "outside-reference", unreferenced_medication_count], 0)
 })
@@ -80,14 +80,14 @@ test_that("restricted exports respect different coding and link case fields and 
   )
   for (include_medication in c(TRUE, FALSE)) {
     if (!include_medication) fixture$config$code_summary_sources <- Filter(function(source) source$resource != "Medication", fixture$config$code_summary_sources)
-    fixture$config$code_summary_exports$variants <- c("all", "filtered_age_ge18")
-    run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+    fixture$config$code_summary_exports$variants <- c("all", "interpolar_cases")
+    run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
       table_description = fixture$description,
       query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
     )
-    expected <- attr(run(), "variant_reports")$filtered_age_ge18
-    fixture$config$code_summary_exports$variants <- "filtered_age_ge18"
-    actual <- attr(run(), "variant_reports")$filtered_age_ge18
+    expected <- attr(run(), "variant_reports")$interpolar_cases
+    fixture$config$code_summary_exports$variants <- "interpolar_cases"
+    actual <- attr(run(), "variant_reports")$interpolar_cases
     expect_equal(lapply(actual, identity), lapply(expected, identity))
     expect_equal(lapply(attr(actual, "local_reports"), identity), lapply(attr(expected, "local_reports"), identity))
     expect_true(nrow(attr(actual, "local_reports")$Medication[code == "B01" & row_type == "detail"]) > 0L)
@@ -106,14 +106,14 @@ test_that("large adult case selections do not repeat a nested-loop case membersh
   sources <- resolveCodeSummarySources(fixture$metadata, fixture$config, fixture$description)
   sources <- Filter(function(source) source$resource == "Observation", sources)
   case_query <- buildCodeSummaryCaseGroupsQuery(
-    fixture$metadata, parseCodeSummaryExports(fixture$config$code_summary_exports),
+    fixture$metadata, parseCodeSummaryExports(),
     include_filtered = TRUE, table_description = fixture$description
   )
   query <- buildCodeSummaryQuery(
     sources, list(), fixture$config$code_summary_systems,
     fixture$config$code_summary_report_types,
     case_groups_query = case_query,
-    export_variants = "filtered_age_ge18", query_mode = "catalog"
+    export_variants = "interpolar_cases", query_mode = "catalog"
   )
   fixture$extra_sql <- c(fixture$extra_sql, paste0(
     "CREATE TEMP TABLE query_plan (line text); DO $plan$ DECLARE line text; BEGIN ",

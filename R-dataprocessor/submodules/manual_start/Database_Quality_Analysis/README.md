@@ -67,18 +67,14 @@ With the default configuration, each run writes three artifacts to
 - `Database_Quality_Analysis_Value_Summary_<analysis-start>.zip`: ZIP archive
   with value summary CSV files grouped in `FHIR/` and `Frontend/` folders.
 - `Database_Quality_Analysis_Code_Summary_<analysis-start>.zip`: code-based CSV
-  reports for the complete database, additional CSVs restricted to the selected
-  IP main cases, and a description of the configured sources.
+  reports for all eligible main cases and for the selected INTERPOLAR main cases,
+  plus a description of the configured sources. Both selections use age at
+  main-case admission (18 or older).
 
 The Code Summary ZIP is also written to `outputLocal/dataprocessor/reports`,
 with the same filename. Its local version contains all aggregate
 combinations, including `count < 5`; its global version retains those combinations
 and writes small positive counts as `<5`.
-Selected IP variants require `FHIR` in `FILTERED_SCOPE_SHEET_NAMES`.
-Their IP filename suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX` (default
-`INTERPOLAR`). If that scope is disabled, selected IP variants are omitted.
-Only variants selected in `[exports].variants` are calculated and written.
-
 The filename timestamp is the analysis start time, shared by the run's outputs.
 The normal toolchain start archives existing `dataprocessor` output directories
 with a timestamp and applies `MAX_DIR_COUNT` retention. Check the current
@@ -269,22 +265,14 @@ The following columns or values are handled specially:
 
 ## Code Summary ZIP
 
-The code report implements #1495 and is enabled by default. Set
-`INCLUDE_CODE_SUMMARY = false` to disable all code scopes. The complete-database
-variant reads configured FHIR last-version views without an additional date or
-status filter. A separate variant restricts events to the selected IP main cases.
-The additional global quality summary from #1462 and clinical categorization
-remain outside this report. The availability workbook and Value Summary ZIP
-keep their previous content.
+The code report reads the configured FHIR last-version views. Set
+`INCLUDE_CODE_SUMMARY = false` to disable the code reports.
 
-The default selection produces eight CSVs: Observation, Condition, Procedure and
-Medication for all adult main cases (suffix `_AGE_GE18`) and for selected adult
-IP main cases (suffix `_INTERPOLAR_AGE_GE18`), plus `README.txt`. Adulthood means
+When both case selections are available, the code ZIP contains eight CSVs:
+Observation, Condition, Procedure and Medication for all adult main cases (suffix `_all`) and for selected adult
+IP main cases (suffix `_interpolar`), plus `README.txt`. Adulthood means
 an age of at least 18 years at main-case admission.
 
-Selecting all six supported variants produces six CSVs per resource (24 total)
-in that same ZIP. `[exports].variants` in `code_summary.toml` selects which
-variants are calculated and written; see the selection table below.
 Medication usage resources contribute to Medication.csv only.
 Resources with an available configured source but no selected codes still get
 CSV headers. Unavailable sources are documented with their resolved fields.
@@ -301,30 +289,28 @@ of at least five remain exact, and unavailable counts remain empty. No
 single measurement has a mean/median but no sample SD. Totals remain deduplicated
 independently in both versions. Both exports share the passes of their resource/code batch.
 
-### Complete database and IP cases
+### All cases and INTERPOLAR cases
 
-The additional `*_INTERPOLAR.csv` files reuse the existing filtered Excel scope: join
+The `*_interpolar.csv` files use the same case selection as the filtered Excel sheets: join
 `pids_per_ward.encounter_id` to `Encounter.enc_id`, then select the distinct
 `enc_main_encounter_calculated_ref` values. Relative and absolute references are
 normalized before matching the code events to those main cases.
 
 Filtering is by case, not just by patient. Another case of the same patient is
-excluded if it is outside the selected set. Events without a usable main-case
-reference contribute only to the complete-database report. Consequently
-`no_case_count` is zero for the selected IP events.
+excluded if it is outside the selected set. Both reports require a usable main-case reference, so `no_case_count` is zero.
 
 Medication has no own patient/case association. Its codes enter the IP report
 through the Requests, Administrations and Statements assigned to selected cases.
 Only those usage events supply patient, case and usage counts. Direct medication
 codes and unresolved-reference rows use their owning usage resource's case.
-An unlinked Medication therefore contributes only to the complete-database report.
+A Medication without eligible usage events has no case association.
 
 Counts, statistics and totals are calculated independently for each scope.
-The same code may have an exact count of at least five for the complete database
+The same code may have an exact count of at least five across all eligible cases
 and a masked `<5` count for IP cases. Both scopes retain its detail row; local
 CSV counts remain exact.
 
-All configured case/age variants and both export targets share the aggregate SQL
+Both case selections and both export targets share the aggregate SQL
 query and projected source data within each resource batch. No separate detail/statistic query is
 issued per scope or export target. Small counts are masked only during global
 CSV export; this requires no additional database queries.
@@ -332,33 +318,11 @@ An empty IP selection produces CSV headers without fabricated zero totals.
 If the required Encounter or `pids_per_ward` metadata is unavailable, the module
 warns and omits the IP code CSVs; it never substitutes unfiltered results.
 
-### Age at main-case admission and CSV selection
+### Age at main-case admission
 
-The default selection in `code_summary.toml` is
-`variants = ["all_age_ge18", "filtered_age_ge18"]`.
-To request all six code ZIP variants, configure:
-
-```toml
-[exports]
-variants = ["all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18"]
-age_column = "enc_age_at_admission"
-fallback_to_birthdate = true
-```
-
-| Variant | CSV example | Included events |
-| --- | --- | --- |
-| `all` | `Observation.csv` | Complete database, including events without case/age |
-| `all_age_ge18` | `Observation_AGE_GE18.csv` | Main-case admission age >=18 |
-| `all_age_lt18` | `Observation_AGE_LT18.csv` | Main-case admission age <18 |
-| `filtered` | `Observation_INTERPOLAR.csv` | Selected IP main cases, regardless of known age |
-| `filtered_age_ge18` | `Observation_INTERPOLAR_AGE_GE18.csv` | Selected IP main cases with admission age >=18 |
-| `filtered_age_lt18` | `Observation_INTERPOLAR_AGE_LT18.csv` | Selected IP main cases with admission age <18 |
-
-Any non-empty subset is supported; omitted variants are neither aggregated nor
-written. For example, `variants = ["all_age_ge18", "filtered_age_ge18"]` writes
-only the adult reports. The IP suffix follows `FILTERED_SCOPE_DETAIL_SHEET_SUFFIX`;
-filtered variants still require `FHIR` in `FILTERED_SCOPE_SHEET_NAMES`.
-Older custom TOMLs without `[exports]` retain the original `all`/`filtered` layout.
+The DQA start requests both code reports, `all_cases` and `interpolar_cases`.
+Both include cases from age 18 at main-case admission. The INTERPOLAR report
+uses main cases selected through Encounter and `pids_per_ward`.
 
 The age lookup matches the event's normalized main-case reference to the main
 Encounter's own `enc_id`. A ward Encounter's admission age does not replace the
@@ -369,18 +333,14 @@ maintained Encounter schema. If it is absent and `fallback_to_birthdate = true`,
 SQL derives completed calendar years from the main Encounter's `period/start`
 and its Patient's `birthDate`, using the Table Description to resolve columns.
 This fallback requires typed date/timestamp fields; it does not cast raw text dates.
-A case beginning on the patient's 18th birthday belongs to `AGE_GE18`.
+A case beginning on the patient's 18th birthday belongs to the adult selection.
 
 Missing, negative or invalid ages, dates before birth, unknown cases and
-conflicting age groups for duplicate main Encounter IDs do not enter either age
-group. They remain in the corresponding report without an age filter. Newborns
-(age zero) belong to `AGE_LT18`. A patient with cases in both age groups can be
-counted once in each group. Medication codes enter age groups through their
-case-linked usage events, so the same Medication ID can occur in both age groups.
-These are event selections, not additive partitions of all distinct resource IDs.
+conflicting age groups for duplicate main Encounter IDs are excluded. Medication
+codes contribute through usage events linked to eligible main cases.
 
-An unavailable age column and unavailable/disabled birthdate fallback produce a
-warning and omit only age-specific CSVs. No unfiltered data is substituted.
+If neither the age column nor the configured birthdate fallback is available,
+DQA warns and writes the code ZIP with just its README.
 An available age source with no matching cases produces header-only CSVs.
 The ZIP README records the actual age source and each selected scope.
 
@@ -546,18 +506,15 @@ data. The reference lookup uses the same normalization as the existing report.
 A reference counts even if its usage row has no case, no direct code or no usable
 own ID.
 
-For example, a Medication with code `A02AH01` and no recognized usage contributes
-`unreferenced_medication_count = 1`. An inline Request with the same code and no
-Medication reference contributes its own usage ID and request count; equal codes
+An inline Request contributes its own usage ID and request count. Equal codes
 alone do not connect resource IDs or make the Medication referenced.
 The unreferenced count deduplicates Medication IDs independently in detail
 and total rows. A Medication with multiple codes/ingredients can occur in several detail
 rows but contributes once to each corresponding system total. Inline-only and
 unresolved-reference rows contribute zero to the unreferenced-Medication count.
 
-With the default mapping, Medication has no own patient/case reference. An
-unreferenced Medication cannot enter the IP subset through a usage event, so its
-count occurs only in the complete-database CSV; IP rows have zero. Missing
+With the default mapping, an unreferenced Medication has no case association,
+so this count is zero in both case reports. Missing
 Medication or required usage sources produce empty/unavailable unreferenced
 counts, rather than asserting that partially observed Medications are unused.
 The lookup reuses the projected medication-link data and adds no SQL requests.

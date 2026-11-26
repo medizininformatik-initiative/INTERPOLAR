@@ -27,11 +27,11 @@ test_that("code chunks preserve every detail count and statistic across report v
     "INSERT INTO medicationrequest (medreq_id,medreq_encounter_calculated_ref,medreq_medicationreference_ref,medreq_direct_system,medreq_direct_code) VALUES ('cross-chunk','Encounter/e2',NULL,'http://fhir.de/CodeSystem/bfarm/atc','B01'),('cross-chunk','Encounter/e1','Medication/example',NULL,NULL),('no-ref-direct','Encounter/e2',NULL,NULL,NULL),('no-ref-direct','Encounter/e1',NULL,'http://fhir.de/CodeSystem/bfarm/atc','outside-direct');"
   )
   fixture$config$code_summary_processing <- list(enabled = FALSE, target_rows_per_chunk = 3, max_codes_per_chunk = 1L)
-  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  for (selection in list(fixture$config$code_summary_exports$variants, "filtered_age_ge18", c("all_age_lt18", "filtered_age_ge18"), "all")) {
+  for (selection in list(fixture$config$code_summary_exports$variants, "interpolar_cases", "all_cases", "all")) {
     fixture$config$code_summary_exports$variants <- selection
     fixture$config$code_summary_processing$enabled <- FALSE
     fixture$config$code_summary_query_batching <- "all"
@@ -63,19 +63,19 @@ test_that("code chunk planning isolates hot codes and never divides a code group
 test_that("empty selected scopes and missing optional Medication sources work with chunks", {
   fixture <- codeSummaryAgeFixture()
   fixture$config$code_summary_processing <- list(enabled = TRUE, target_rows_per_chunk = 2, max_codes_per_chunk = 1L)
-  fixture$config$code_summary_exports$variants <- "filtered_age_ge18"
+  fixture$config$code_summary_exports$variants <- "interpolar_cases"
   fixture$extra_sql <- c(fixture$extra_sql, "DELETE FROM pids_per_ward;")
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  reports <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  scope <- attr(reports, "variant_reports")$filtered_age_ge18
+  scope <- attr(reports, "variant_reports")$interpolar_cases
   expect_true(all(vapply(scope, nrow, integer(1)) == 0L))
   fixture <- codeSummaryFilteredFixture()
   fixture$config$code_summary_exports$variants <- "filtered"
   fixture$config$code_summary_sources <- Filter(function(source) source$resource != "Medication", fixture$config$code_summary_sources)
   fixture$config$code_summary_processing <- list(enabled = FALSE, target_rows_per_chunk = 2, max_codes_per_chunk = 1L)
-  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
@@ -91,7 +91,7 @@ test_that("chunked automatic SNOMED statistics preserve non-finite values and un
     "INSERT INTO observation (obs_id,obs_code_system,obs_code_version,obs_code_code,obs_value,obs_unit,obs_unit_system,obs_low,obs_high,obs_range_type) VALUES ('nonfinite','http://snomed.info/sct','demo-v1','386661006','Infinity','Cel','http://unitsofmeasure.org','36','38','normal'),('other-unit','http://snomed.info/sct','demo-v1','386661006',37,'Cel','urn:other-units','36.0','38.0','normal');"
   )
   fixture$config$code_summary_processing <- list(enabled = FALSE, target_rows_per_chunk = 5, max_codes_per_chunk = 1L)
-  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
@@ -113,7 +113,7 @@ test_that("measurement chunks share preparation and keep all counts and exact st
     "INSERT INTO observation (obs_id,obs_code_system,obs_code_version,obs_code_code,obs_value,obs_unit,obs_unit_system,obs_low,obs_high,obs_range_type) VALUES ('nonfinite','http://snomed.info/sct','demo-v1','386661006','Infinity','Cel','http://unitsofmeasure.org','36','38','normal'),('other-unit','http://snomed.info/sct','demo-v1','386661006',37,'Cel','urn:other-units','36.0','38.0','normal'),('missing-value','http://loinc.org',NULL,'empty',NULL,'mg',NULL,NULL,NULL,NULL);"
   )
   queries <- character()
-  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       queries <<- c(queries, query)

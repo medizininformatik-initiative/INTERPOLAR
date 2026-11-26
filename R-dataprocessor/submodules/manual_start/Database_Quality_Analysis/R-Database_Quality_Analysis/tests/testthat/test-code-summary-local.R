@@ -6,7 +6,7 @@ test_that("one query retains complete global and local counts and statistics", {
     "('rare1','Patient/p1','Encounter/e1','http://loinc.org','r2',100,'g/L');"
   )
   calls <- 0L
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -43,7 +43,7 @@ test_that("one query retains complete global and local counts and statistics", {
 
 test_that("local SNOMED detail retains codes and measurements below five", {
   fixture <- codeSummarySnomedFixture()
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -62,7 +62,7 @@ test_that("local SNOMED detail retains codes and measurements below five", {
 
 test_that("archive target masks global counts while retaining codes and exact local data", {
   fixture <- codeSummaryFixture()
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)

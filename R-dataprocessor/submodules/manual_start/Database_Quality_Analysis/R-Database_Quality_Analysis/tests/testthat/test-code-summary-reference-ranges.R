@@ -14,7 +14,7 @@ test_that("LOINC retains every reference range and deduplicates totals", {
     "INSERT INTO observation SELECT * FROM observation WHERE obs_code_code IN ('normal-priority','missing-type','other-types','mixed');"
   )
   calls <- 0L
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -59,7 +59,7 @@ test_that("measurement unit systems remain separate for the same code and unit",
     "SELECT 'other-unit'||n,'http://loinc.org','v1','common',1,'mg/dL',",
     "'urn:other-units','1','10','normal' FROM generate_series(1,5) n;"
   )
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -74,7 +74,7 @@ test_that("measurement unit systems remain separate for the same code and unit",
 
 test_that("range types and ages preserve exact counts in adult scopes and chunks", {
   fixture <- codeSummaryRangeFixture()
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  reports <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
@@ -100,7 +100,7 @@ test_that("range types and ages preserve exact counts in adult scopes and chunks
   }
   fixture$config$code_summary_processing$enabled <- TRUE
   fixture$config$code_summary_processing$max_codes_per_chunk <- 1L
-  chunked <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  chunked <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )

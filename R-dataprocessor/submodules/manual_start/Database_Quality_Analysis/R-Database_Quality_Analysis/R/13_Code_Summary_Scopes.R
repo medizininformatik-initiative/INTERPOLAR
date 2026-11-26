@@ -66,7 +66,7 @@ buildCodeSummaryCaseGroupsQuery <- function(metadata, exports, include_filtered 
     "SELECT marker.case_id, CASE WHEN COUNT(DISTINCT marker.age_group)=1 THEN MIN(marker.age_group) END AS age_group, ",
     "BOOL_OR(marker.is_filtered) AS is_filtered FROM (SELECT ", case_id, " AS case_id, ",
     main_case_id, " AS main_case_id, CASE WHEN (", age, ") >= 18 THEN 'ge18' WHEN (", age,
-    ") < 18 THEN 'lt18' END AS age_group, ", ip, " AS is_filtered FROM ",
+    ") < 18 THEN 'below_threshold' END AS age_group, ", ip, " AS is_filtered FROM ",
     quoteTable(encounter$VIEW_SCHEMA[[1]], encounter$VIEW_NAME[[1]]), " e", patient_join, ward_join,
     ") classified CROSS JOIN LATERAL (VALUES (classified.case_id,classified.age_group,false), ",
     "(classified.main_case_id,NULL,classified.is_filtered)) marker(case_id,age_group,is_filtered) ",

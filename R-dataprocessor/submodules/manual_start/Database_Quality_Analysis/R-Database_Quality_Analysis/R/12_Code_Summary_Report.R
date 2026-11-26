@@ -5,6 +5,14 @@
 #' retain every combination; small counts are masked only during global CSV export.
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
                                      table_description = NULL) {
+  buildCodeSummaryReports(metadata, config, query_fun, table_description,
+    export_variants = c("all_cases", "interpolar_cases")
+  )
+}
+
+# Build the result tables for the scopes supplied by the caller.
+buildCodeSummaryReports <- function(metadata, config, query_fun, table_description = NULL,
+                                    export_variants) {
   started <- Sys.time()
   logProgress("Code summary: resolving configured sources and available database columns.")
   if (is.null(table_description)) {
@@ -21,29 +29,29 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     list()
   }
   exports <- parseCodeSummaryExports(config$code_summary_exports)
-  export_variants <- exports$variants
+  requested_variants <- export_variants
+  adult_variants <- c("all_cases", "interpolar_cases")
+  ip_requested <- any(export_variants %in% c("interpolar_cases", "filtered"))
   case_scope_query <- NULL
-  scope_note <- if (any(startsWith(export_variants, "filtered"))) {
-    "Filtered code export disabled: FHIR is not configured in FILTERED_SCOPE_SHEET_NAMES."
-  } else "Filtered code export disabled by exports.variants."
-  if (any(startsWith(export_variants, "filtered")) && isFilteredScopeSheetConfigured("FHIR", config)) {
+  scope_note <- if (ip_requested) "Filtered code export disabled: FHIR is not configured in FILTERED_SCOPE_SHEET_NAMES." else "INTERPOLAR code report not selected."
+  if (ip_requested && ("interpolar_cases" %in% export_variants || isFilteredScopeSheetConfigured("FHIR", config))) {
     candidate <- getFilteredScopeMainEncounterSubquery(metadata)
     if (is.na(candidate)) {
-      scope_note <- "Filtered code export skipped: required Encounter/pids_per_ward metadata unavailable."
+      scope_note <- "INTERPOLAR code report skipped: required Encounter/pids_per_ward metadata unavailable."
       warning(scope_note, call. = FALSE)
     } else {
       case_scope_query <- candidate
-      scope_note <- "Filtered code export enabled: main cases selected through Encounter and pids_per_ward."
+      scope_note <- "INTERPOLAR main cases selected through Encounter and pids_per_ward."
     }
   }
-  if (is.null(case_scope_query)) export_variants <- export_variants[!startsWith(export_variants, "filtered")]
+  if (is.null(case_scope_query)) export_variants <- setdiff(export_variants, c("interpolar_cases", "filtered"))
   case_groups_query <- NULL
   age_source <- paste0("main Encounter.", exports$age_column)
-  if (any(grepl("_age_", export_variants, fixed = TRUE))) {
+  if (any(export_variants %in% adult_variants)) {
     candidate <- buildCodeSummaryCaseGroupsQuery(metadata, exports, !is.null(case_scope_query), table_description)
     if (is.na(candidate)) {
       warning("Age-specific code exports skipped: Encounter age/birthdate metadata unavailable (", exports$age_column, ").", call. = FALSE)
-      export_variants <- export_variants[!grepl("_age_", export_variants, fixed = TRUE)]
+      export_variants <- setdiff(export_variants, adult_variants)
     } else {
       case_groups_query <- candidate
       age_source <- attr(candidate, "age_source", exact = TRUE)
@@ -167,7 +175,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     paste0("Configuration: ", config$code_summary_config_file),
     "Scope: configured FHIR last-version views, unfiltered; no additional date/status filter.",
     scope_note,
-    paste0("Requested CSV variants: ", paste(exports$variants, collapse = ", ")),
+    paste0("Requested CSV variants: ", paste(requested_variants, collapse = ", ")),
     paste0("Available CSV variants: ", paste(export_variants, collapse = ", ")),
     if (!is.null(config$code_summary_processing)) paste0(
       "Code-group processing: enabled=", config$code_summary_processing$enabled,
@@ -200,7 +208,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     "medication_count counts actual Medication IDs; direct codes without Medication have medication_count=0.",
     "unreferenced_medication_count: actual Medication IDs without a recognized incoming reference from the configured usage resources.",
     "Reference existence is independent of usage codes and case assignment; identical codes without a reference do not link IDs.",
-    "With default mappings, unreferenced Medications have no case association and occur only in complete-database CSVs.",
+    "With default mappings, unreferenced Medications have no case association and are excluded from adult case reports.",
     "Unreferenced counts are unavailable (empty) if the Medication source or a required usage source is unavailable.",
     "Request/Administration/Statement counts use their own IDs; patient/case counts include those direct and linked resources.",
     "Matching direct/reference identities deduplicate in totals; masking is applied independently to each eligible count column.",
@@ -238,16 +246,12 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     attr(filtered, "scope_description") <- scope_description
     attr(result, "filtered_reports") <- filtered
   }
-  scope_label <- getFilteredScopeLabel(config)
-  if (length(scope_label) != 1L || is.na(scope_label) || !nzchar(scope_label)) scope_label <- "FILTERED"
-  age_variants <- export_variants[grepl("_age_", export_variants, fixed = TRUE)]
+  age_variants <- intersect(export_variants, adult_variants)
   variant_reports <- lapply(age_variants, function(variant) {
-    filtered <- startsWith(variant, "filtered")
-    adult <- endsWith(variant, "ge18")
-    suffix <- paste0(if (filtered) paste0(scope_label, "_") else "", if (adult) "AGE_GE18" else "AGE_LT18")
+    case_description <- if (variant == "interpolar_cases") "selected INTERPOLAR cases" else "all cases"
     description <- c(
-      paste0("Scope: ", if (filtered) paste0(scope_label, "; ") else "", "main-case age at admission ", if (adult) ">=18" else "<18", "."),
-      paste0("Age source: ", age_source, "; missing, negative or invalid ages and conflicting age groups are excluded from age-specific CSVs."),
+      paste0("Scope: ", case_description, "; main-case age at admission >=18."),
+      paste0("Age source: ", age_source, "; missing, negative or invalid ages and conflicting age groups are excluded."),
       "Only events linked to the matching main case contribute; Medication codes use their associated usage events.",
       attr(result, "description")[!startsWith(attr(result, "description"), "Scope:")]
     )
@@ -256,7 +260,7 @@ createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbG
     attr(reports, "description") <- description
     attr(local, "description") <- c("LOCAL CODE SUMMARY: includes all aggregate combinations, including counts below five.", description)
     attr(reports, "local_reports") <- local
-    attr(reports, "scope_label") <- suffix
+    attr(reports, "scope_label") <- sub("_cases$", "", variant)
     attr(reports, "scope_description") <- description[1:3]
     reports
   })

@@ -41,7 +41,7 @@ test_that("new medication and coding reports and renamed measurements use config
   )
   calls <- 0L
   unresolved_queries <- 0L
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -70,7 +70,7 @@ test_that("new medication and coding reports and renamed measurements use config
 test_that("plain coding sources do not read unrelated medication views or measurements", {
   fixture <- codeSummaryFixture()
   fixture$config$code_summary_sources <- fixture$config$code_summary_sources[2:3]
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {

@@ -63,9 +63,8 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
   if (!is.null(case_groups_query)) {
     conditions <- c(
       conditions,
-      all_age_ge18 = "s.age_group='ge18'", all_age_lt18 = "s.age_group='lt18'",
-      filtered = "s.is_filtered", filtered_age_ge18 = "s.is_filtered AND s.age_group='ge18'",
-      filtered_age_lt18 = "s.is_filtered AND s.age_group='lt18'"
+      all_cases = "s.age_group='ge18'",
+      filtered = "s.is_filtered", interpolar_cases = "s.is_filtered AND s.age_group='ge18'"
     )
   } else if (!is.null(case_scope_query)) {
     conditions <- c(conditions, filtered = "s.case_id IS NOT NULL")

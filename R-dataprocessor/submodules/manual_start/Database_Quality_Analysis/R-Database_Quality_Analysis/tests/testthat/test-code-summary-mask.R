@@ -9,7 +9,7 @@ test_that("global CSVs mask all small counts and suppress rare measurement stati
   original <- data.table::copy(rows)
   reports <- list(Medication = rows)
   attr(reports, "local_reports") <- list(Medication = rows)
-  variants <- c("all", "filtered", "all_age_ge18", "all_age_lt18", "filtered_age_ge18", "filtered_age_lt18")
+  variants <- c("all", "filtered", "all_cases", "interpolar_cases")
   attr(reports, "export_variants") <- variants
   scopes <- lapply(variants[-1], function(variant) {
     scope <- list(Medication = rows)
@@ -35,7 +35,7 @@ test_that("global CSVs mask all small counts and suppress rare measurement stati
     folder <- file.path(root, paste0(target, "-csv"))
     utils::unzip(archive, exdir = folder)
     csvs <- list.files(file.path(folder, "Codes"), full.names = TRUE)
-    expect_length(csvs, 6L)
+    expect_length(csvs, length(variants))
     for (csv in csvs) {
       exported <- data.table::fread(csv, colClasses = "character", na.strings = "")
       expect_equal(exported$code, rows$code)
@@ -63,7 +63,7 @@ test_that("global CSVs mask all small counts and suppress rare measurement stati
 test_that("small code batches retain rare details without rare-pool SQL", {
   fixture <- codeSummaryFixture()
   fixture$config$code_summary_exports$variants <- "all"
-  run <- function() createCodeSummaryReports(fixture$metadata, fixture$config,
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       expect_false(grepl("frequencies AS|rare_groups|other \\(count < 5\\)", query))

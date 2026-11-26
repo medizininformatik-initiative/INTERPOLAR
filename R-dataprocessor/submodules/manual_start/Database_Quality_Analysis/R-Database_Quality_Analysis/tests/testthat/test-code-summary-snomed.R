@@ -1,7 +1,7 @@
 test_that("synthetic SNOMED data produce visible detail rows in all four reports", {
   fixture <- codeSummarySnomedFixture()
   calls <- 0L
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {

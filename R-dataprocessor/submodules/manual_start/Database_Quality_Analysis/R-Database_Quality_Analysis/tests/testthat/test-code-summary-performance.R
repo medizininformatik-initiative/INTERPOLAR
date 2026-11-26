@@ -7,7 +7,7 @@ test_that("flattened medication links preserve direct-code identities and null-v
     "INSERT INTO medicationrequest (medreq_id,medreq_patient_ref,medreq_encounter_calculated_ref,medreq_medicationreference_ref,medreq_direct_system,medreq_direct_version,medreq_direct_code) VALUES ('identity-different-version','Patient/p1','Encounter/e2','Medication/identity-med','http://fhir.de/CodeSystem/bfarm/atc','v2','identity-code');"
   )
   calls <- 0L
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  reports <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       calls <<- calls + 1L
@@ -36,13 +36,13 @@ test_that("resource batches preserve all results and read only their own resourc
   for (fixture_fun in list(codeSummaryFixture, codeSummarySnomedFixture, codeSummaryFilteredFixture)) {
     fixture <- fixture_fun()
     fixture$config$code_summary_query_batching <- "all"
-    expected <- createCodeSummaryReports(fixture$metadata, fixture$config,
+    expected <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
       table_description = fixture$description,
       query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
     )
     fixture$config$code_summary_query_batching <- "resource"
     queries <- character()
-    actual <- createCodeSummaryReports(fixture$metadata, fixture$config,
+    actual <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
       table_description = fixture$description,
       query_fun = function(query, lock_id) {
         queries <<- c(queries, query)

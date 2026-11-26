@@ -1,5 +1,6 @@
-test_that("all six code scopes share classification and preserve counts, ages and measurements", {
+test_that("both adult code scopes share classification and preserve counts, ages and measurements", {
   fixture <- codeSummaryAgeFixture()
+  fixture$config$code_summary_exports$variants <- NULL
   queries <- character()
   reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
@@ -13,33 +14,22 @@ test_that("all six code scopes share classification and preserve counts, ages an
   expect_equal(lengths(regmatches(queries, gregexpr("FROM raw_events e", queries, fixed = TRUE))), 1L)
   expect_equal(lengths(regmatches(queries, gregexpr('FROM "pg_temp"."observation"', queries, fixed = TRUE))), 1L)
   variants <- attr(reports, "variant_reports", exact = TRUE)
-  expect_named(variants, c("all_age_ge18", "all_age_lt18", "filtered_age_ge18", "filtered_age_lt18"))
+  expect_named(variants, c("all_cases", "interpolar_cases"))
   for (name in names(variants)) {
     local <- attr(variants[[name]], "local_reports", exact = TRUE)
-    adults <- endsWith(name, "ge18")
     detail <- local$Observation[row_type == "detail" & code == "age-check"]
-    expect_equal(detail$count, if (adults) 1 else 2)
-    expect_equal(detail$case_count, if (adults) 1 else 2)
+    expect_equal(detail$count, 1)
+    expect_equal(detail$case_count, 1)
     expect_equal(detail$patient_count, 1)
     expect_equal(detail$no_case_count, 0)
-    expect_equal(detail$mean, if (adults) 2 else 2.5)
-    expect_equal(detail$median, if (adults) 2 else 2.5)
+    expect_equal(detail$mean, 2)
+    expect_equal(detail$median, 2)
     expect_equal(variants[[name]]$Observation, local$Observation)
     expect_true(all(local$Medication$unreferenced_medication_count == 0))
     linked <- local$Medication[row_type == "detail" & code == "B01"]
     expect_equal(linked$medication_count, 1)
-    expect_equal(linked$medication_request_count, if (adults) 1 else 2)
-    expect_equal(linked$medication_administration_count, if (adults) 1 else 3)
-  }
-  legacy <- fixture
-  legacy$config$code_summary_exports$variants <- c("all", "filtered")
-  expected <- createCodeSummaryReports(legacy$metadata, legacy$config,
-    table_description = legacy$description,
-    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(legacy, query)
-  )
-  for (resource in names(expected)) {
-    expect_equal(reports[[resource]], expected[[resource]])
-    expect_equal(attr(reports, "filtered_reports")[[resource]], attr(expected, "filtered_reports")[[resource]])
+    expect_equal(linked$medication_request_count, 1)
+    expect_equal(linked$medication_administration_count, 1)
   }
   fixture$config$code_summary_query_batching <- "resource"
   queries <- character()
@@ -56,6 +46,7 @@ test_that("all six code scopes share classification and preserve counts, ages an
 
 test_that("CSV variants are selected before aggregation and written to the existing ZIP", {
   fixture <- codeSummaryAgeFixture()
+  fixture$config$code_summary_exports$variants <- NULL
   root <- tempfile("code-age-scopes-")
   dir.create(root)
   on.exit(unlink(root, recursive = TRUE), add = TRUE)
@@ -67,28 +58,18 @@ test_that("CSV variants are selected before aggregation and written to the exist
     },
     add = TRUE
   )
-  for (selection in list(fixture$config$code_summary_exports$variants, c("all_age_lt18", "filtered_age_ge18"))) {
-    fixture$config$code_summary_exports$variants <- selection
-    reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
-      table_description = fixture$description,
-      query_fun = function(query, lock_id) {
-        if (!"all" %in% selection) expect_false(grepl("THEN 'all' END", query, fixed = TRUE))
-        if (!"filtered" %in% selection) expect_false(grepl("THEN 'filtered' END", query, fixed = TRUE))
-        runCodeSummaryFixtureQuery(fixture, query)
-      }
-    )
-    suffixes <- c(
-      all = "", all_age_ge18 = "_AGE_GE18", all_age_lt18 = "_AGE_LT18", filtered = "_INTERPOLAR",
-      filtered_age_ge18 = "_INTERPOLAR_AGE_GE18", filtered_age_lt18 = "_INTERPOLAR_AGE_LT18"
-    )
-    for (target in c("global", "local")) {
-      archive <- writeCodeSummaryArchive(reports, "DQA", target = target)
-      members <- utils::unzip(archive, list = TRUE)$Name
-      expected <- unlist(lapply(suffixes[selection], function(suffix) paste0("Codes/", names(reports), suffix, ".csv")))
-      expect_setequal(members[endsWith(members, ".csv")], unname(expected))
-    }
+  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
+  )
+  for (target in c("global", "local")) {
+    archive <- writeCodeSummaryArchive(reports, "DQA", target = target)
+    members <- utils::unzip(archive, list = TRUE)$Name
+    expected <- unlist(lapply(c("all", "interpolar"), function(scope) {
+      paste0("Codes/", names(reports), "_", scope, ".csv")
+    }))
+    expect_setequal(members[endsWith(members, ".csv")], expected)
   }
-  fixture$config$code_summary_exports$variants <- "all_age_ge18"
   expect_warning(reports <- createCodeSummaryReports(fixture$metadata[COLUMN_NAME != "enc_age_at_admission"], fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) stop("No unavailable scope should be queried")
@@ -99,49 +80,31 @@ test_that("CSV variants are selected before aggregation and written to the exist
   }
 })
 
-test_that("missing age and disabled IP metadata skip only unavailable variants", {
+test_that("the DQA start omits unavailable INTERPOLAR cases and rejects configurable variants", {
   fixture <- codeSummaryAgeFixture()
-  expect_warning(reports <- createCodeSummaryReports(fixture$metadata[COLUMN_NAME != "enc_age_at_admission"], fixture$config,
+  config <- fixture$config
+  config$code_summary_exports$variants <- NULL
+  config$filtered_scope_sheet_names <- character()
+  reports <- createCodeSummaryReports(fixture$metadata, config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
-  ), "Age-specific code exports skipped")
-  expect_equal(attr(reports, "export_variants"), c("all", "filtered"))
-  expect_length(attr(reports, "variant_reports"), 0L)
-  fixture$config$filtered_scope_sheet_names <- character()
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
-    table_description = fixture$description,
-    query_fun = function(query, lock_id) {
-      expect_false(grepl('"pids_per_ward"', query, fixed = TRUE))
-      runCodeSummaryFixtureQuery(fixture, query)
-    }
   )
-  expect_equal(attr(reports, "export_variants"), c("all", "all_age_ge18", "all_age_lt18"))
-  expect_null(attr(reports, "filtered_reports"))
-  fixture$config$code_summary_exports$variants <- "all"
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  expect_equal(attr(reports, "export_variants"), c("all_cases", "interpolar_cases"))
+  expect_warning(reports <- createCodeSummaryReports(fixture$metadata[TABLE_NAME != "pids_per_ward"], config,
     table_description = fixture$description,
-    query_fun = function(query, lock_id) {
-      expect_false(grepl('"encounter"', query, fixed = TRUE))
-      runCodeSummaryFixtureQuery(fixture, query)
-    }
-  )
-  expect_equal(attr(reports, "export_variants"), "all")
-})
-
-test_that("export settings accept legacy TOMLs and reject ambiguous selections", {
-  expect_equal(parseCodeSummaryExports()$variants, c("all", "filtered"))
-  config <- getConfig(envir = new.env(parent = emptyenv()), command_arguments = character())
-  expect_equal(config$code_summary_exports$variants, c("all_age_ge18", "filtered_age_ge18"))
-  for (variants in list(character(), c("all", "all"), "adults", NA_character_, TRUE)) {
-    expect_error(parseCodeSummaryExports(list(variants = variants)), "unique CSV variants")
+    query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
+  ), "INTERPOLAR code report skipped")
+  expect_equal(attr(reports, "export_variants"), "all_cases")
+  for (variants in list("all_age_lt18", "filtered_age_lt18", "all", "filtered", "all_cases")) {
+    expect_error(parseCodeSummaryExports(list(variants = variants)), "Unknown code summary")
   }
   expect_error(parseCodeSummaryExports(list(age_column = "")), "non-empty database column")
-  expect_error(parseCodeSummaryExports(list(unrecognized = TRUE)), "Unknown code summary")
   expect_error(parseCodeSummaryExports(list(fallback_to_birthdate = "true")), "must be a TOML boolean")
 })
 
 test_that("absent age columns use calendar age at main-case admission with one Patient scan", {
   fixture <- codeSummaryAgeFixture()
+  fixture$config$code_summary_exports$variants <- NULL
   additions <- data.table::data.table(
     RESOURCE = c("Encounter", "Patient"), FHIR_EXPRESSION = c("period/start", "birthDate"),
     COLUMN_NAME = c("enc_period_start", "pat_birthdate")
@@ -173,12 +136,12 @@ test_that("absent age columns use calendar age at main-case admission with one P
   for (name in names(variants)) {
     local <- attr(variants[[name]], "local_reports")$Observation
     detail <- local[row_type == "detail" & code == "age-check"]
-    expect_equal(detail$count, if (endsWith(name, "ge18")) 1 else 2)
-    expect_equal(detail$mean, if (endsWith(name, "ge18")) 2 else 2.5)
+    expect_equal(detail$count, 1)
+    expect_equal(detail$mean, 2)
   }
-  expected <- variants$filtered_age_ge18
-  fixture$config$code_summary_exports$variants <- "filtered_age_ge18"
-  selected <- createCodeSummaryReports(metadata, fixture$config,
+  expected <- variants$interpolar_cases
+  selected <- buildCodeSummaryReports(metadata, fixture$config,
+    export_variants = "interpolar_cases",
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
       prefix <- strsplit(query, "\nSELECT c.", fixed = TRUE)[[1]][[1]]
@@ -187,7 +150,7 @@ test_that("absent age columns use calendar age at main-case admission with one P
       runCodeSummaryFixtureQuery(fixture, query)
     }
   )
-  actual <- attr(selected, "variant_reports")$filtered_age_ge18
+  actual <- attr(selected, "variant_reports")$interpolar_cases
   expect_equal(lapply(actual, identity), lapply(expected, identity))
   expect_equal(lapply(attr(actual, "local_reports"), identity), lapply(attr(expected, "local_reports"), identity))
   fixture$config$code_summary_exports$fallback_to_birthdate <- FALSE
@@ -197,17 +160,16 @@ test_that("absent age columns use calendar age at main-case admission with one P
   ), "Age-specific code exports skipped")
 })
 
-test_that("available but unknown main-case ages produce empty age reports without changing other scopes", {
+test_that("available but unknown main-case ages produce empty age reports for both selections", {
   fixture <- codeSummaryAgeFixture()
+  fixture$config$code_summary_exports$variants <- NULL
   fixture$extra_sql <- c(fixture$extra_sql, "UPDATE encounter SET enc_age_at_admission=NULL;")
   reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )
-  expect_equal(reports$Observation[row_type == "total", count], 22)
-  expect_equal(attr(reports, "filtered_reports")$Observation[row_type == "total", count], 16)
   variants <- attr(reports, "variant_reports")
-  expect_length(variants, 4L)
+  expect_length(variants, 2L)
   for (variant in variants) {
     expect_true(all(vapply(variant, nrow, integer(1)) == 0L))
     expect_true(all(vapply(attr(variant, "local_reports"), nrow, integer(1)) == 0L))

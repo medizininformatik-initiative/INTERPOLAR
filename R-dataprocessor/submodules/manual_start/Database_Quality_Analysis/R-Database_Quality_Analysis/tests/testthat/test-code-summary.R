@@ -71,7 +71,7 @@ test_that("code sources resolve FHIR paths and never fall back to raw encounter 
 test_that("resource reports batch source reads and keep archive columns free of IDs", {
   fixture <- codeSummaryFixture()
   calls <- 0L
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     query_fun = function(query, lock_id) {
       calls <<- calls + 1L
@@ -95,7 +95,7 @@ test_that("resource reports batch source reads and keep archive columns free of 
 
 test_that("PostgreSQL deduplicates measurements, rare groups, systems and owning resources", {
   fixture <- codeSummaryFixture()
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -156,7 +156,7 @@ test_that("SNOMED separates Coding roles, preserves resource boundaries and dedu
     "INSERT INTO patient (pat_id,pat_code_system,pat_code_code) SELECT 'p'||n,'http://snomed.info/sct','123' FROM generate_series(1,5) n;",
     "INSERT INTO encounter (enc_id,enc_code_system,enc_code_code,enc_main_encounter_calculated_ref) SELECT 'e'||n,'http://snomed.info/sct','123','Encounter/main1' FROM generate_series(1,5) n;"
   )
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -182,7 +182,7 @@ test_that("SNOMED separates Coding roles, preserves resource boundaries and dedu
 
 test_that("code ZIP includes one CSV per resource and system/source documentation", {
   fixture <- codeSummaryFixture()
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     query_fun = function(...) data.table::data.table(), table_description = fixture$description
   )
@@ -215,7 +215,7 @@ test_that("direct medication codes survive unavailable Medication reference sour
     "INSERT INTO medicationrequest (medreq_id,medreq_direct_system,medreq_direct_code) ",
     "SELECT 'inline'||n,'http://fhir.de/CodeSystem/bfarm/atc','direct' FROM generate_series(1,5) n;"
   )
-  expect_warning(summaries <- createCodeSummaryReports(
+  expect_warning(summaries <- createCodeSummaryFixtureReports(
     available_metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)

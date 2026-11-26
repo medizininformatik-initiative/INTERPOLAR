@@ -154,9 +154,7 @@ codeSummaryFilteredFixture <- function() {
 
 codeSummaryAgeFixture <- function() {
   fixture <- codeSummaryFilteredFixture()
-  fixture$config$code_summary_exports$variants <- c(
-    "all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18"
-  )
+  fixture$config$code_summary_exports$variants <- c("all_cases", "interpolar_cases")
   fixture$metadata <- data.table::rbindlist(list(fixture$metadata, data.table::data.table(
     TABLE_FAMILY = "FHIR", TABLE_NAME = "encounter", VIEW_SCHEMA = "pg_temp", VIEW_NAME = "encounter",
     COLUMN_NAME = "enc_age_at_admission", DATA_TYPE = "text", ORDINAL_POSITION = 7L
@@ -197,7 +195,7 @@ runCodeSummaryFixtureQuery <- function(fixture, query) {
 # Repeated ranges and type Codings share six resources, three patients and two cases.
 codeSummaryRangeFixture <- function() {
   fixture <- codeSummaryAgeFixture()
-  fixture$config$code_summary_exports$variants <- c("all_age_ge18", "filtered_age_ge18")
+  fixture$config$code_summary_exports$variants <- c("all_cases", "interpolar_cases")
   fixture$extra_sql <- c(
     fixture$extra_sql,
     "DELETE FROM observation;",
@@ -209,4 +207,10 @@ codeSummaryRangeFixture <- function() {
     "INSERT INTO observation (obs_id,obs_patient_ref,obs_encounter_calculated_ref,obs_code_system,obs_code_code,obs_value,obs_unit,obs_low,obs_high,obs_range_type,obs_age_low,obs_age_low_unit) SELECT 'small-'||n,'Patient/small','Encounter/e2','http://loinc.org','synthetic-small',n,'mg/L','0','5','normal','18','years' FROM generate_series(1,3) n;"
   )
   fixture
+}
+
+createCodeSummaryFixtureReports <- function(metadata, config, ...) {
+  variants <- config$code_summary_exports$variants
+  config$code_summary_exports$variants <- NULL
+  buildCodeSummaryReports(metadata, config, ..., export_variants = variants)
 }

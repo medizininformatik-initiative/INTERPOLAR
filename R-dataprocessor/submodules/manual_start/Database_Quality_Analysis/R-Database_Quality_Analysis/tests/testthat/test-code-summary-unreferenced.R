@@ -14,7 +14,7 @@ test_that("unreferenced Medications are counted independently of usage codes and
   for (mode in c("all", "resource")) {
     fixture$config$code_summary_query_batching <- mode
     calls <- 0L
-    reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+    reports <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
       table_description = fixture$description,
       query_fun = function(query, lock_id) {
         calls <<- calls + 1L
@@ -56,7 +56,7 @@ test_that("unreferenced Medications are counted independently of usage codes and
 
 test_that("unreferenced counts are unavailable if a required usage source is missing", {
   fixture <- codeSummaryFixture()
-  expect_warning(expect_warning(reports <- createCodeSummaryReports(
+  expect_warning(expect_warning(reports <- createCodeSummaryFixtureReports(
     fixture$metadata[TABLE_NAME != "medicationstatement"], fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -70,7 +70,7 @@ test_that("usage-only code reports cannot claim a measured unreferenced Medicati
   fixture <- codeSummaryFixture()
   fixture$config$code_summary_sources <- Filter(function(source) source$resource != "Medication", fixture$config$code_summary_sources)
   fixture$extra_sql <- "INSERT INTO medicationrequest (medreq_id,medreq_direct_system,medreq_direct_code) SELECT 'only-direct'||n,'http://fhir.de/CodeSystem/bfarm/atc','direct' FROM generate_series(1,5) n;"
-  reports <- createCodeSummaryReports(fixture$metadata, fixture$config,
+  reports <- createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
   )

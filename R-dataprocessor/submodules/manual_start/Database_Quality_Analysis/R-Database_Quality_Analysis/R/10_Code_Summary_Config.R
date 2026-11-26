@@ -62,24 +62,14 @@ parseCodeSummaryProcessing <- function(processing = NULL) {
   processing
 }
 
-#' Validate the requested CSV variants and the main-encounter age column
-#'
-#' Older TOMLs without an exports section retain the two original variants.
+#' Validate the source of age at main-case admission
 parseCodeSummaryExports <- function(exports = NULL) {
-  defaults <- list(variants = c("all", "filtered"), age_column = "enc_age_at_admission", fallback_to_birthdate = TRUE)
+  defaults <- list(age_column = "enc_age_at_admission", fallback_to_birthdate = TRUE)
   if (is.null(exports)) return(defaults)
   if (!is.list(exports) || length(setdiff(names(exports), names(defaults)))) {
     stop("Unknown code summary exports setting.", call. = FALSE)
   }
   exports <- utils::modifyList(defaults, exports)
-  allowed <- c("all", "all_age_ge18", "all_age_lt18", "filtered", "filtered_age_ge18", "filtered_age_lt18")
-  variants <- exports$variants
-  if (
-    !is.character(variants) || !length(variants) || anyNA(variants) ||
-    anyDuplicated(variants) || !all(variants %in% allowed)
-  ) {
-    stop("exports.variants must contain unique CSV variants from: ", paste(allowed, collapse = ", "), call. = FALSE)
-  }
   if (
     !is.character(exports$age_column) || length(exports$age_column) != 1L ||
     is.na(exports$age_column) || !nzchar(trimws(exports$age_column))

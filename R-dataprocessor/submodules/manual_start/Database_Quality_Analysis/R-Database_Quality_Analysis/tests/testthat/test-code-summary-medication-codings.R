@@ -21,7 +21,7 @@ test_that("PZN and ASK use their own Coding fields and deduplicate linked medica
     "INSERT INTO medicationstatement SELECT * FROM medicationstatement WHERE medstat_id LIKE 'product-%';"
   )
   calls <- 0L
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -70,7 +70,7 @@ test_that("inline medication codes and references count owning IDs once", {
     "INSERT INTO medicationstatement (medstat_id,medstat_direct_system,medstat_direct_code) SELECT 'inline'||n,'http://fhir.de/CodeSystem/ifa/pzn','00123456' FROM generate_series(1,5) n;",
     "INSERT INTO medicationrequest SELECT * FROM medicationrequest WHERE medreq_id LIKE 'inline%';"
   )
-  summaries <- createCodeSummaryReports(
+  summaries <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)
@@ -99,7 +99,7 @@ test_that("inline medication codes and references count owning IDs once", {
 
 test_that("missing link views are unavailable rather than measured zero counts", {
   fixture <- codeSummaryFixture()
-  expect_warning(expect_warning(summaries <- createCodeSummaryReports(
+  expect_warning(expect_warning(summaries <- createCodeSummaryFixtureReports(
     fixture$metadata[TABLE_NAME != "medicationstatement"], fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(fixture, query)

@@ -55,7 +55,7 @@ test_that("explicit measurement overrides remain available", {
   fixture$config$code_summary_sources[[1]]$measurement <- TRUE
   fixture$metadata[COLUMN_NAME == "obs_value", DATA_TYPE := "text"]
   calls <- 0L
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
@@ -85,7 +85,7 @@ test_that("a configured numeric value enables statistics on another resource and
     "FROM generate_series(1,6) n;"
   )
   calls <- 0L
-  reports <- createCodeSummaryReports(
+  reports <- createCodeSummaryFixtureReports(
     fixture$metadata, fixture$config,
     table_description = fixture$description,
     query_fun = function(query, lock_id) {
