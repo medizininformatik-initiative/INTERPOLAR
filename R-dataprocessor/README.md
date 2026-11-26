@@ -69,7 +69,7 @@ Submoduls wird kein Herkunftszusatz für einen abgeschlossenen Lauf vergeben.
 Pro Submodullauf gibt es zusätzlich je ein ZIP für die tatsächlich erzeugten
 globalen und lokalen Ergebnisse im jeweiligen Ordner `reports`. Der Archivname
 folgt dem Schema `<Submodul>_<Herkunftszusatz>.zip`. Die
-Einzeldateien bleiben verfügbar. Im ZIP bleiben ihre relativen Pfade erhalten.
+Einzeldateien bleiben verfügbar. Im ZIP liegen sie direkt auf der obersten Ebene.
 
 Die endgültigen Pfade werden nach dem Umbenennen im Laufprotokoll ausgegeben.
 

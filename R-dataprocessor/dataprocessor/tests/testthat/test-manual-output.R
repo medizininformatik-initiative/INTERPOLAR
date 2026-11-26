@@ -67,11 +67,11 @@ test_that("only outputs written by the current run receive provenance", {
   local_zip <- file.path(module_dirs$local_dir, "reports", paste0("Example_Check", archive_suffix))
   expect_setequal(
     utils::unzip(global_zip, list = TRUE)$Name,
-    file.path("reports", basename(paths[dirname(paths) == global_reports]))
+    basename(paths[dirname(paths) == global_reports])
   )
   expect_equal(
     utils::unzip(local_zip, list = TRUE)$Name,
-    file.path("tables", basename(paths[dirname(paths) == local_tables]))
+    basename(paths[dirname(paths) == local_tables])
   )
   expect_length(nameManualOutputs(getManualOutputFiles(module_dirs), module_dirs, context), 0L)
 })

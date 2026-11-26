@@ -113,7 +113,7 @@ nameManualOutputs <- function(previous_outputs, module_dirs, output_context) {
   invisible(destinations)
 }
 
-#' Bundle each audience's reports while preserving paths relative to its output root
+#' Bundle each audience's reports with all files at the archive root
 archiveManualOutputs <- function(paths, module_dirs, submodule_name, output_context) {
   if (!length(paths)) {
     return(invisible(NULL))
@@ -144,7 +144,7 @@ archiveManualOutputs <- function(paths, module_dirs, submodule_name, output_cont
     on.exit(unlink(temporary_zip), add = TRUE)
     setwd(output_dir)
     # Prefix relative paths so archive members cannot be interpreted as options.
-    status <- utils::zip(temporary_zip, files = paste0("./", members), flags = "-q")
+    status <- utils::zip(temporary_zip, files = paste0("./", members), flags = "-qj")
     if (!identical(status, 0L) || !file.rename(temporary_zip, destination)) {
       stop("Could not create manual output archive: ", destination, call. = FALSE)
     }
