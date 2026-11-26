@@ -9,6 +9,16 @@ SNAPSHOT_MEDICATION_REFERENCE_SPECS <- data.table::data.table(
     "medadm_medicationreference_ref",
     "medstat_medicationreference_ref"
   ),
+  direct_system_column = c(
+    "medreq_medicationcodeableconcept_system",
+    "medadm_medicationcodeableconcept_system",
+    "medstat_medicationcodeableconcept_system"
+  ),
+  direct_code_column = c(
+    "medreq_medicationcodeableconcept_code",
+    "medadm_medicationcodeableconcept_code",
+    "medstat_medicationcodeableconcept_code"
+  ),
   system_column = c(
     "medreq_medication_system",
     "medadm_medication_system",
@@ -23,6 +33,10 @@ SNAPSHOT_MEDICATION_REFERENCE_SPECS <- data.table::data.table(
 
 SNAPSHOT_MEDICATION_INGREDIENT_REFERENCE_COLUMN <-
   "med_ingredient_itemreference_ref"
+SNAPSHOT_MEDICATION_INGREDIENT_CODING_COLUMNS <- c(
+  "med_ingredient_itemcodeableconcept_system",
+  "med_ingredient_itemcodeableconcept_code"
+)
 SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN <-
   ".snapshot_medication_reference_issues"
 

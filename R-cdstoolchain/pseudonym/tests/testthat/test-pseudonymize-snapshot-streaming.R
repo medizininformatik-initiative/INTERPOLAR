@@ -707,6 +707,7 @@ test_that("observation enrichment aggregates incompatible units without warnings
     obs_code_code = rep("1975-2", 3),
     obs_valuequantity_value = c(1, 2, 3),
     obs_valuequantity_code = "mg",
+    obs_valuequantity_system = "http://unitsofmeasure.org",
     obs_valuequantity_unit = "milligram"
   )
   mapping <- data.table::data.table(
