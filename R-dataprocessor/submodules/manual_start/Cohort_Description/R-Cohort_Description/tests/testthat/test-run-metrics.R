@@ -47,6 +47,8 @@ test_that("normal cohort start writes metrics on success and on an analysis erro
   expect_equal(metrics$max_rss_kib, 2048)
   expect_equal(result$file, "example.xlsx")
   expect_true(file.exists(file.path(report_dir, "cohort_quality.csv")))
+  readme <- readLines(file.path(dirname(report_dir), "README.md"))
+  expect_true(any(grepl("algorithmic_mrps_by_first_meda_timing.csv", readme, fixed = TRUE)))
   diagnostic <- file.path(local_dir, "diagnostics", "cohort_description", "regular", "unlinked_station_contacts.csv")
   expect_identical(data.table::fread(diagnostic)$encounter_id, "missing")
   expect_false(dir.exists(file.path(local_dir, "reports")))

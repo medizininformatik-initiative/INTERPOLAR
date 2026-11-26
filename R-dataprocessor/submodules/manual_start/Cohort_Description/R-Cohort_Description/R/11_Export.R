@@ -155,11 +155,13 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory, sou
           "[^[:alnum:]_-]", "_",
           paste(period$ward_name, period$phase, name, sep = "_")
         ), ".xlsx")
+        admission_only <- is.na(period$period_start)
         headers <- c(
           paste(period$phase, site, period$ward_name, name, sep = " - "),
           paste(
-            "Observation time period:", format(period$period_start, tz = timezone), "to",
-            format(period$period_end, tz = timezone), "(end exclusive)"
+            if (admission_only) "Hospital admission period:" else "Observation time period:",
+            format(if (admission_only) period$admission_start else period$period_start, tz = timezone), "to",
+            format(if (admission_only) period$admission_end else period$period_end, tz = timezone), "(end exclusive)"
           ),
           paste("Ward type:", ward$ward_type, "-", ward$department)
         )
@@ -170,7 +172,7 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory, sou
         manifest[[length(manifest) + 1L]] <- data.table::data.table(
           file = filename,
           source = source, ward = period$ward_name, phase = period$phase, fas = name,
-          definition_status = if (period$phase == "TRS") "provisional" else "agreed",
+          definition_status = "agreed",
           cases = nrow(selected), patients = data.table::uniqueN(selected$patient_id)
         )
       })

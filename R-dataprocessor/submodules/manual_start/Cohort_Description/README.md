@@ -3,7 +3,8 @@
 The module generates all seven FAS (1, 2.1, 2.2, 3, 4, 4.1, 4.2) for every
 configured station and study, including empty combinations: 35 workbooks per station.
 BS, CRS A and CRS B use the regular snapshot; TRS and RES use the Broad Consent snapshot.
-The TRS time window uses a provisional definition documented in `open_questions.md`.
+TRS includes available Broad Consent cases admitted from 1 January 2023 through
+31 December 2026. RES uses the CRS B eligibility rules on the Broad Consent snapshot.
 
 ## Prepare the databases
 
@@ -62,11 +63,15 @@ it shows file x of y for the current source, station, study and FAS.
 
 ## Results
 
+The shared report folder contains a `README.md` describing the CSV files and columns.
+
+See the [calculation rules](calculation-rules.md) for the medication analysis and hospital admission rows.
+
 Results are written below `outputGlobal/dataprocessor/reports/cohort_description/`,
 separately in `regular/` and `broad_consent/`. A partial run updates its selected source.
 Each source directory contains the expanded Excel workbooks, `cohort_manifest.csv`,
 `cohort_quality.csv`, `cohort_run_metrics.csv` and `open_questions.md`.
-The manifest records the source, population sizes and whether definitions are provisional.
+The manifest records the source and population sizes.
 `NA` denotes an unavailable statistic.
 
 The metrics record source, status, elapsed seconds and peak R-process memory in KiB.
@@ -78,6 +83,6 @@ Local ID diagnostics are written to
 `outputLocal/dataprocessor/diagnostics/cohort_description/<source>/unlinked_station_contacts.csv`.
 The log records only the excluded row count and file path.
 
-`mrp_nach_meda_lage.csv` counts FAS 1 cases and stored algorithmic MRPs by
+`algorithmic_mrps_by_first_meda_timing.csv` counts FAS 1 cases and stored algorithmic MRPs by
 station, study and timing of the first completed MedA of the hospital case.
 It includes MRPs without a completed review.

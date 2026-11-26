@@ -79,6 +79,9 @@ createCohortDescription <- function(source = "regular") {
     source = source
   ))
   data.table::fwrite(data$quality, file.path(directory, "cohort_quality.csv"))
+  if (!file.copy(cohortAssetPath("report_readme.md"), file.path(dirname(directory), "README.md"), overwrite = TRUE)) {
+    stop("Could not write the cohort report README.")
+  }
   message("Cohort Description completed: ", nrow(manifest), " expanded workbooks in ", directory)
   status <- "completed"
   invisible(manifest)

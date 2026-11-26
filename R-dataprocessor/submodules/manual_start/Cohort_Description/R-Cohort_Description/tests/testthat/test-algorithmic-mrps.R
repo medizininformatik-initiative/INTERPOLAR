@@ -46,7 +46,7 @@ test_that("BC periods include the full last TRS day and retain CRS B limits for 
   fixture <- cohortFixture()
   periods <- buildCohortPeriods(fixture$wards, "broad_consent", "Europe/Berlin")
   expect_equal(periods$phase, c("TRS", "RES"))
-  expect_equal(periods[phase == "TRS"]$period_end, as.POSIXct("2027-01-01", tz = "Europe/Berlin"))
+  expect_equal(periods[phase == "TRS"]$admission_end, as.POSIXct("2027-01-01", tz = "Europe/Berlin"))
   regular <- buildCohortPeriods(fixture$wards, "regular", "Europe/Berlin")
   for (column in c("period_start", "period_end", "admission_start", "admission_end", "discharge_limit")) {
     expect_equal(as.numeric(periods[phase == "RES"][[column]]), as.numeric(regular[phase == "CRS B"][[column]]))
@@ -61,7 +61,13 @@ test_that("BC periods include the full last TRS day and retain CRS B limits for 
   expect_equal(assignCohortPopulations(cases, periods, "Europe/Berlin")$phase, "TRS")
   cases[, ip_start := as.POSIXct("2027-01-01", tz = "Europe/Berlin")]
   cases[, ip_end := ip_start + 86400]
+  expect_equal(assignCohortPopulations(cases, periods, "Europe/Berlin")$phase, "TRS")
+  cases[, hospital_start := as.POSIXct("2027-01-01", tz = "Europe/Berlin")]
   expect_equal(nrow(assignCohortPopulations(cases, periods, "Europe/Berlin")), 0L)
+  cases[, hospital_start := as.POSIXct("2022-12-31 23:59:59", tz = "Europe/Berlin")]
+  expect_equal(nrow(assignCohortPopulations(cases, periods, "Europe/Berlin")), 0L)
+  cases[, hospital_start := as.POSIXct("2023-01-01", tz = "Europe/Berlin")]
+  expect_equal(assignCohortPopulations(cases, periods, "Europe/Berlin")$phase, "TRS")
 })
 
 test_that("BC export includes all seven FAS for both studies, including empty subsets", {
@@ -77,7 +83,7 @@ test_that("BC export includes all seven FAS for both studies, including empty su
   capture.output(manifest <- exportCohortDescription(
     fixture$cases, fixture$wards, "UTC", "site", directory, "broad_consent"
   ))
-  summary <- data.table::fread(file.path(directory, "mrp_nach_meda_lage.csv"))
+  summary <- data.table::fread(file.path(directory, "algorithmic_mrps_by_first_meda_timing.csv"))
   expect_equal(nrow(summary), 8L)
   expect_setequal(summary$phase, c("TRS", "RES"))
   expect_equal(sum(summary$cases_with_first_completed_meda), 1L)
@@ -86,7 +92,7 @@ test_that("BC export includes all seven FAS for both studies, including empty su
   expect_setequal(manifest$phase, c("TRS", "RES"))
   expect_setequal(manifest$fas, c("FAS 1", "FAS 2.1", "FAS 2.2", "FAS 3", "FAS 4", "FAS 4.1", "FAS 4.2"))
   expect_true(all(manifest$source == "broad_consent"))
-  expect_true(all(manifest[phase == "TRS"]$definition_status == "provisional"))
+  expect_true(all(manifest[phase == "TRS"]$definition_status == "agreed"))
   expect_true(all(manifest[startsWith(fas, "FAS 4")]$cases == 0L))
 })
 

@@ -22,13 +22,12 @@ buildCohortPeriods <- function(wards, source = "regular", timezone = etlutils::G
   data.table::rbindlist(lapply(seq_len(nrow(wards)), function(i) {
     ward <- wards[i]
     if (source == "broad_consent") {
-      # Provisional TRS definition pending scientific confirmation (refs #1478).
       trs_start <- as.POSIXct("2023-01-01", tz = timezone)
       trs_end <- as.POSIXct("2027-01-01", tz = timezone)
       return(data.table::data.table(
         ward_name = ward$ward_name, phase = c("TRS", "RES"),
-        period_start = c(trs_start, ward$phase_b_start),
-        period_end = c(trs_end, crs_end),
+        period_start = c(as.POSIXct(NA), ward$phase_b_start),
+        period_end = c(as.POSIXct(NA), crs_end),
         admission_start = c(trs_start, crs_start),
         admission_end = c(trs_end, crs_end),
         discharge_limit = c(as.POSIXct(NA), crs_end + as.difftime(28, units = "days"))
@@ -65,7 +64,8 @@ assignCohortPopulations <- function(cases, periods, timezone) {
   joined <- joined[!is.na(age) & age >= 18 &
     !is.na(ip_end) & as.Date(ip_end, tz = timezone) > as.Date(ip_start, tz = timezone) &
     hospital_start >= admission_start & hospital_start < admission_end &
-    ip_start >= period_start & ip_start < period_end &
+    (is.na(period_start) | ip_start >= period_start) &
+    (is.na(period_end) | ip_start < period_end) &
     (is.na(discharge_limit) | (!is.na(hospital_end) & hospital_end < discharge_limit))]
   joined[, `:=`(fas1 = TRUE, fas22 = has_completed_ip_meda %in% TRUE)]
   joined[, fas21 := fas22 | (!is.na(ip_end) & as.numeric(difftime(ip_end, ip_start, units = "hours")) >= 168)]

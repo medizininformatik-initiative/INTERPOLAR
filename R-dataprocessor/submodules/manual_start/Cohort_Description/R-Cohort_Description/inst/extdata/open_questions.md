@@ -13,12 +13,25 @@ eine abgeschlossene Bewertung haben. Für 4.1 zählt „MRP nicht bestätigt“ 
 Bestätigungsvarianten. Ein Fall kann über unterschiedliche MRPs in beide
 Untergruppen fallen.
 
-## Vorläufiges TRS-Zeitfenster
+## TRS und RES
 
-TRS verwendet einen Gesamtzeitraum vom 01.01.2023 einschließlich bis zum
-01.01.2027 ausschließlich in der Projektzeitzone. Krankenhausaufnahme und erster
-IP-Eintritt liegen darin; eine zusätzliche Entlassungsfrist gilt nicht.
-Gesamtzeitraum statt Phasenteilung, Grenzen und Entlassungsregel sind noch zu bestätigen.
+Für TRS zählt die Krankenhausaufnahme vom 01.01.2023 bis einschließlich
+31.12.2026 in der Projektzeitzone. Der erste bekannte IP-Aufenthalt bestimmt
+die Station. Die Aufnahmegrenzen gelten ausschließlich für die Krankenhausaufnahme.
+TRS umfasst die verfügbaren Fälle der Broad-Consent-Datenbank, die die allgemeinen
+Kohortenkriterien erfüllen. RES verwendet die Zeit- und Fallgrenzen von CRS B.
+
+## Offene fachliche Entscheidungen
+
+Bei der eGFR-Präsenz zählen Fälle ohne auswertbaren Wert derzeit als Missing
+Information. Zur Freigabe steht eine geänderte Regel: Fälle ohne dokumentierten
+eGFR-Befund zählen als auswertbares Nein, Fälle mit dokumentiertem, aber nicht
+auswertbarem Befund bleiben Missing Information.
+
+Die Präsenzzeilen für LOINC, ICD, ATC und OPS verwenden die aktuellen Nenner.
+Die überarbeiteten Zählregeln aus der Arbeitsvorlage v14 sind noch nicht umgesetzt.
+Das gilt auch für die Trennung des allgemeinen LOINC-Blocks vom Block für
+INTERPOLAR-relevante LOINC-Codes. Beide Blöcke verwenden derzeit denselben Filter.
 
 ## Auswertungsumfang
 
