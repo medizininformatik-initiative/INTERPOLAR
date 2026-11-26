@@ -3,7 +3,7 @@
 The module generates all seven FAS (1, 2.1, 2.2, 3, 4, 4.1, 4.2) for every
 configured station and study, including empty combinations: 35 workbooks per station.
 BS, CRS A and CRS B use the regular snapshot; TRS and RES use the Broad Consent snapshot.
-FAS 4.x and the TRS time window use provisional definitions documented in `open_questions.md`.
+The TRS time window uses a provisional definition documented in `open_questions.md`.
 
 ## Prepare the databases
 
@@ -77,3 +77,7 @@ both sources from that invocation. Return the completed source directories.
 Local ID diagnostics are written to
 `outputLocal/dataprocessor/diagnostics/cohort_description/<source>/unlinked_station_contacts.csv`.
 The log records only the excluded row count and file path.
+
+`mrp_nach_meda_lage.csv` counts FAS 1 cases and stored algorithmic MRPs by
+station, study and timing of the first completed MedA of the hospital case.
+It includes MRPs without a completed review.

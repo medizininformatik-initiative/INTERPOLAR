@@ -28,8 +28,11 @@ test_that("database preparation feeds case features without per-row resource rea
         record_id = "r", meda_id = "m",
         mrp_id = "mrp", outcome = "Problem nicht gelöst"
       ))
+      if (grepl("v_dp_mrp_calculations", query)) return(data.table::data.table(
+        case_id = character(), meda_id = character(), ret_id = character(), dp_mrp_calculations_id = integer()
+      ))
       if (grepl("v_retrolektive", query)) return(data.table::data.table(
-        record_id = character(), case_id = character(), meda_id = character(), ret_id = character(),
+        record_id = character(), meda_id = character(), ret_id = character(),
         ret_gewissheit1 = character(), ret_gewiss_grund1_abl = character(), ret_gewiss_grund1_abl_01 = character()
       ))
       stop("Unexpected query")

@@ -1,43 +1,45 @@
-test_that("FAS 4 uses reviewed algorithmic MRPs from all completed first-IP MedAs", {
+test_that("FAS 4 uses the first completed IP MedA and permits a different reviewed MRP", {
   cases <- data.table::data.table(patient_id = c("p", "q"), case_id = c("c", "d"))
-  completed <- data.table::data.table(
-    patient_id = "p", case_id = "c", meda_id = c("first", "second", "later"),
-    on_first_ip = c(TRUE, TRUE, FALSE)
+  first_ip <- data.table::data.table(
+    patient_id = c("p", "q"), case_id = c("c", "d"),
+    meda_id = c("ip", "q_ip"), case_row = 1:2, meda_location = "first_ip"
+  )
+  first <- data.table::copy(first_ip)
+  first[1, `:=`(meda_id = "earlier", meda_location = "before_first_ip")]
+  calculations <- data.table::data.table(
+    case_id = c("c", "c", "c", "d"), meda_id = c("ip", "earlier", "earlier", "q_ip"),
+    ret_id = c("a", "b", "b", "c"), dp_mrp_calculations_id = 1:4
   )
   reviews <- data.table::data.table(
-    patient_id = c("p", "p", "p", "q"), case_id = c("c", "c", "c", "d"),
-    meda_id = c("second", "second", "later", "first"), ret_id = letters[1:4],
-    ret_gewissheit1 = c(
-      "MRP bestätigt und von Stationsapotheker vorher identifiziert",
-      "MRP nicht bestätigt", "MRP bestätigt", "MRP bestätigt"
-    ),
-    ret_gewiss_grund1_abl = NA_character_,
-    ret_gewiss_grund1_abl_01 = c(NA, "MRP sachlich richtig, aber klinisch nicht relevant", NA, NA)
+    patient_id = c("p", "q"), meda_id = c("ip", "q_later"), ret_id = c("different", "c"),
+    ret_gewissheit1 = "MRP bestätigt", ret_gewiss_grund1_abl = NA_character_,
+    ret_gewiss_grund1_abl_01 = NA_character_
   )
-  result <- addCohortAlgorithmicMRPFlags(cases, completed, reviews)
+  evaluate <- function() addCohortAlgorithmicMRPFlags(
+    data.table::copy(cases), first, first_ip,
+    list(calculations = calculations, reviews = reviews)
+  )
+  result <- evaluate()
   expect_equal(result$has_reviewed_algorithmic_mrp, c(TRUE, FALSE))
-  expect_equal(result$has_irrelevant_algorithmic_mrp, c(TRUE, FALSE))
-  expect_equal(result$has_relevant_algorithmic_mrp, c(TRUE, FALSE))
-  later <- addCohortAlgorithmicMRPFlags(cases, completed, reviews[3:4])
-  expect_false(any(later$has_reviewed_algorithmic_mrp))
-  reviews[1, ret_gewissheit1 := "MRP nicht bestätigt"]
-  reviews[1, ret_gewiss_grund1_abl := "MRP sachlich falsch (keine Kontraindikation)"]
-  other <- addCohortAlgorithmicMRPFlags(cases, completed, reviews[1])
-  expect_true(other$has_reviewed_algorithmic_mrp[1])
-  expect_false(any(other$has_relevant_algorithmic_mrp | other$has_irrelevant_algorithmic_mrp))
-})
-
-test_that("review loading requires completed reviews of the same calculated MRP and MedA", {
-  testthat::local_mocked_bindings(
-    dbGetReadOnlyQuery = function(query, lock_id) {
-      expect_match(query, "c.ret_id = r.ret_id AND c.meda_id = r.ret_meda_id", fixed = TRUE)
-      expect_match(query, "retrolektive_mrpbewertung_complete = 'Complete'", fixed = TRUE)
-      data.table::data.table(record_id = c("r", "outside"), case_id = "c", meda_id = "m")
-    }, .package = "etlutils"
-  )
-  result <- loadCohortAlgorithmicReviews(data.table::data.table(record_id = "r", patient_id = "p"))
-  expect_equal(result$patient_id, "p")
-  expect_equal(nrow(result), 1L)
+  expect_false(any(result$has_relevant_algorithmic_mrp))
+  expect_equal(result$first_meda_mrps, c(1L, 1L))
+  reviews[1, ret_id := "a"]
+  expect_equal(evaluate()$has_relevant_algorithmic_mrp, c(TRUE, FALSE))
+  irrelevant <- data.table::copy(reviews[1])
+  irrelevant[, `:=`(
+    ret_gewissheit1 = "MRP nicht bestätigt",
+    ret_gewiss_grund1_abl = "MRP sachlich richtig, aber klinisch nicht relevant"
+  )]
+  reviews <- data.table::rbindlist(list(reviews, irrelevant))
+  conflict <- evaluate()
+  expect_true(conflict$has_reviewed_algorithmic_mrp[1])
+  expect_false(conflict$has_relevant_algorithmic_mrp[1] || conflict$has_irrelevant_algorithmic_mrp[1])
+  reviews[3, ret_id := "new_mrp"]
+  calculations <- data.table::rbindlist(list(calculations, calculations[1][, `:=`(
+    ret_id = "new_mrp", dp_mrp_calculations_id = 5L
+  )]))
+  overlap <- evaluate()
+  expect_true(overlap$has_relevant_algorithmic_mrp[1] && overlap$has_irrelevant_algorithmic_mrp[1])
 })
 
 test_that("BC periods include the full last TRS day and retain CRS B limits for RES", {
@@ -75,6 +77,11 @@ test_that("BC export includes all seven FAS for both studies, including empty su
   capture.output(manifest <- exportCohortDescription(
     fixture$cases, fixture$wards, "UTC", "site", directory, "broad_consent"
   ))
+  summary <- data.table::fread(file.path(directory, "mrp_nach_meda_lage.csv"))
+  expect_equal(nrow(summary), 8L)
+  expect_setequal(summary$phase, c("TRS", "RES"))
+  expect_equal(sum(summary$cases_with_first_completed_meda), 1L)
+  expect_true(all(summary$algorithmic_mrps == 0L))
   expect_equal(nrow(manifest), 14L)
   expect_setequal(manifest$phase, c("TRS", "RES"))
   expect_setequal(manifest$fas, c("FAS 1", "FAS 2.1", "FAS 2.2", "FAS 3", "FAS 4", "FAS 4.1", "FAS 4.2"))

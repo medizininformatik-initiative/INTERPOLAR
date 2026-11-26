@@ -1,59 +1,92 @@
-#' Load completed reviews linked to calculated MRPs for the selected patients
+#' Load stored MRP counts and completed REDCap reviews
 #' @param record_ids REDCap record IDs with patient_id.
-#' @return Algorithmic MRP reviews with patient, case and MedA keys.
+#' @return Counts by case and MedA, and completed reviews by patient and MedA.
 loadCohortAlgorithmicReviews <- function(record_ids) {
-  # Existing MRP workflows link calculation evidence and frontend reviews by ret_id.
-  # Read only completed reviews; patient, case and MedA keys also guard the join.
+  calculations <- etlutils::dbGetReadOnlyQuery(
+    paste0(
+      "SELECT DISTINCT enc_id AS case_id, meda_id, ret_id, dp_mrp_calculations_id ",
+      "FROM v_dp_mrp_calculations WHERE meda_id IS NOT NULL"
+    ),
+    lock_id = "Cohort Description: algorithmic MRPs"
+  )
   reviews <- etlutils::dbGetReadOnlyQuery(
     paste0(
-      "SELECT DISTINCT r.record_id, c.enc_id AS case_id, c.meda_id, r.ret_id, ",
-      "r.ret_gewissheit1, r.ret_gewiss_grund1_abl, r.ret_gewiss_grund1_abl_01 ",
-      "FROM v_retrolektive_mrpbewertung_fe_last_version r ",
-      "JOIN v_dp_mrp_calculations c ON c.ret_id = r.ret_id AND c.meda_id = r.ret_meda_id ",
-      "WHERE r.retrolektive_mrpbewertung_complete = 'Complete'"
+      "SELECT DISTINCT record_id, ret_meda_id AS meda_id, ret_id, ",
+      "ret_gewissheit1, ret_gewiss_grund1_abl, ret_gewiss_grund1_abl_01 ",
+      "FROM v_retrolektive_mrpbewertung_fe_last_version ",
+      "WHERE retrolektive_mrpbewertung_complete = 'Complete'"
     ),
-    lock_id = "Cohort Description: completed algorithmic MRP reviews"
+    lock_id = "Cohort Description: completed MRP reviews"
   )
-  merge(reviews, record_ids, by = "record_id", sort = FALSE)
+  list(calculations = calculations, reviews = merge(reviews, record_ids, by = "record_id", sort = FALSE))
 }
 
-#' Assign provisional FAS 4 evidence from completed first-IP medication analyses
+#' Add FAS 4 flags and counts for the first completed MedA of the hospital case
 #' @param cases Case features.
-#' @param completed Completed case-linked MedAs with on_first_ip.
-#' @param reviews Completed reviews linked to algorithmic calculations, or NULL.
-#' @return Case features with three algorithmic MRP flags.
-addCohortAlgorithmicMRPFlags <- function(cases, completed, reviews) {
-  cases <- data.table::copy(data.table::as.data.table(cases))
+#' @param first First completed MedA of the case, with its location.
+#' @param first_ip First completed MedA during the first IP stay.
+#' @param evidence Stored calculations and completed reviews, or NULL.
+#' @return Case features with FAS evidence and MRP counts.
+addCohortAlgorithmicMRPFlags <- function(cases, first, first_ip, evidence) {
   cases[, `:=`(
     has_reviewed_algorithmic_mrp = FALSE,
     has_irrelevant_algorithmic_mrp = FALSE,
-    has_relevant_algorithmic_mrp = FALSE
+    has_relevant_algorithmic_mrp = FALSE,
+    first_meda_location = NA_character_, first_meda_mrps = 0L
   )]
-  if (is.null(reviews) || !nrow(reviews)) return(cases)
-  # Pending scientific confirmation: all completed MedAs during the first IP stay,
-  # and their completed reviews available in the snapshot, including later reviews.
-  eligible <- merge(
-    unique(completed[on_first_ip == TRUE, .(patient_id, case_id, meda_id)]),
-    reviews,
-    by = c("patient_id", "case_id", "meda_id"), sort = FALSE
+  cases[first$case_row, first_meda_location := first$meda_location]
+  if (is.null(evidence) || !nrow(evidence$calculations)) return(cases)
+
+  calculations <- evidence$calculations
+  meda_key <- c("case_id", "meda_id")
+  counts <- merge(first[, c(meda_key, "case_row"), with = FALSE], calculations, by = meda_key)
+  counts <- counts[, .(n = data.table::uniqueN(ret_id[!is.na(ret_id) & nzchar(ret_id)]) +
+    data.table::uniqueN(dp_mrp_calculations_id[is.na(ret_id) | !nzchar(ret_id)], na.rm = TRUE)),
+  by = case_row
+  ]
+  cases[counts$case_row, first_meda_mrps := counts$n]
+
+  eligible <- merge(first_ip[, .(patient_id, case_id, meda_id, case_row)], calculations, by = meda_key)
+  review_key <- c("patient_id", "meda_id")
+  reviewed <- merge(unique(eligible[, .(patient_id, meda_id, case_row)]),
+    unique(evidence$reviews[, ..review_key]),
+    by = review_key
+  )
+  # FAS 4 requires both kinds of evidence on the same MedA. Only the subgroups
+  # require the completed review to identify the same calculated MRP.
+  cases[unique(reviewed$case_row), has_reviewed_algorithmic_mrp := TRUE]
+  matched <- merge(
+    unique(eligible[!is.na(ret_id) & nzchar(ret_id), .(patient_id, meda_id, case_row, ret_id)]),
+    evidence$reviews,
+    by = c(review_key, "ret_id"), allow.cartesian = TRUE
   )
   irrelevant <- "MRP sachlich richtig, aber klinisch nicht relevant"
-  eligible[, `:=`(
+  matched[, `:=`(
     is_irrelevant = ret_gewissheit1 %in% "MRP nicht bestätigt" &
       (ret_gewiss_grund1_abl %in% irrelevant | ret_gewiss_grund1_abl_01 %in% irrelevant),
     is_relevant = ret_gewissheit1 %in% c(
       "MRP bestätigt", "MRP bestätigt und von Stationsapotheker vorher identifiziert"
     )
   )]
-  flags <- eligible[, .(
-    has_reviewed_algorithmic_mrp = TRUE,
-    has_irrelevant_algorithmic_mrp = any(is_irrelevant),
-    has_relevant_algorithmic_mrp = any(is_relevant)
-  ), by = .(patient_id, case_id)]
-  cases[flags, on = .(patient_id, case_id), `:=`(
-    has_reviewed_algorithmic_mrp = i.has_reviewed_algorithmic_mrp,
-    has_irrelevant_algorithmic_mrp = i.has_irrelevant_algorithmic_mrp,
-    has_relevant_algorithmic_mrp = i.has_relevant_algorithmic_mrp
-  )]
+  # Contradictory reviews of one MRP provide neither subgroup classification.
+  flags <- matched[, .(irrelevant = any(is_irrelevant), relevant = any(is_relevant)),
+    by = .(case_row, ret_id)
+  ]
+  cases[unique(flags[irrelevant & !relevant, case_row]), has_irrelevant_algorithmic_mrp := TRUE]
+  cases[unique(flags[relevant & !irrelevant, case_row]), has_relevant_algorithmic_mrp := TRUE]
   cases
+}
+
+writeCohortMRPByMedALocation <- function(populations, periods, directory) {
+  locations <- c("before_first_ip", "first_ip", "after_subsequent_ip", "after_non_ip")
+  grid <- periods[, .(first_meda_location = locations), by = .(ward_name, phase)]
+  counts <- populations[!is.na(first_meda_location), .(
+    cases_with_first_completed_meda = .N,
+    cases_with_algorithmic_mrp = sum(first_meda_mrps > 0L),
+    algorithmic_mrps = sum(first_meda_mrps)
+  ), by = .(ward_name, phase, first_meda_location)]
+  keys <- c("ward_name", "phase", "first_meda_location")
+  result <- counts[grid, on = keys]
+  for (column in setdiff(names(result), keys)) data.table::setnafill(result, fill = 0L, cols = column)
+  data.table::fwrite(result, file.path(directory, "mrp_nach_meda_lage.csv"))
 }

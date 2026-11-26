@@ -1,23 +1,17 @@
 # Offene fachliche Fragen
 
-## Vorläufige FAS-4-Regeln
+## FAS 4, 4.1 und 4.2
 
-Die FAS-4-Ergebnisse beruhen auf folgenden Arbeitsannahmen und benötigen noch
-fachliche Bestätigung (Ticket #1478):
+FAS 4 ergänzt FAS 2.2 um mindestens ein algorithmisch berechnetes MRP und
+mindestens eine retrolektive Bewertung im Status `Complete`. Beide gehören
+zur ersten abgeschlossenen MedA im ersten bekannten IP-Aufenthalt. Die Bewertung
+darf ein anderes MRP derselben MedA betreffen und später abgeschlossen worden sein.
 
-- FAS 4 ergänzt FAS 2.2 um mindestens ein algorithmisch detektiertes MRP mit
-  eigener retrolektiver Bewertung im Status `Complete`.
-- Es zählen alle abgeschlossenen MedAs des ersten bekannten IP-Aufenthalts.
-- Bewertungen zählen bis zum Datenstand des Snapshots, auch nach Entlassung oder Studienende.
-- FAS 4.1 verlangt beim selben abgeschlossenen Bewertungsinstrument
-  „MRP nicht bestätigt“ und „MRP sachlich richtig, aber klinisch nicht relevant“.
-- FAS 4.2 umfasst „MRP bestätigt“ sowie
-  „MRP bestätigt und von Stationsapotheker vorher identifiziert“.
-- FAS 4.1 und 4.2 dürfen sich überschneiden; andere Ablehnungsgründe zählen nur zu FAS 4.
-
-Zu bestätigen sind MedA-Bezug, Verknüpfung von MRP und Bewertung, zeitlicher
-Bewertungsschluss, Abschlussstatus, Relevanzkategorien, abgeschlossene Bewertung
-in den Untergruppen und deren Überschneidung.
+Für FAS 4.1 beziehungsweise 4.2 muss ein berechnetes MRP derselben MedA selbst
+eine abgeschlossene Bewertung haben. Für 4.1 zählt „MRP nicht bestätigt“ mit
+„MRP sachlich richtig, aber klinisch nicht relevant“. Für 4.2 zählen beide
+Bestätigungsvarianten. Ein Fall kann über unterschiedliche MRPs in beide
+Untergruppen fallen.
 
 ## Vorläufiges TRS-Zeitfenster
 

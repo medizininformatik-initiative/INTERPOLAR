@@ -170,7 +170,7 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory, sou
         manifest[[length(manifest) + 1L]] <- data.table::data.table(
           file = filename,
           source = source, ward = period$ward_name, phase = period$phase, fas = name,
-          definition_status = if (period$phase == "TRS" || startsWith(name, "FAS 4")) "provisional" else "agreed",
+          definition_status = if (period$phase == "TRS") "provisional" else "agreed",
           cases = nrow(selected), patients = data.table::uniqueN(selected$patient_id)
         )
       })
@@ -178,6 +178,7 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory, sou
   }
   result <- data.table::rbindlist(manifest)
   data.table::fwrite(result, file.path(directory, "cohort_manifest.csv"))
+  writeCohortMRPByMedALocation(populations, periods, directory)
   if (!file.copy(cohortAssetPath("open_questions.md"), file.path(directory, "open_questions.md"), overwrite = TRUE))
     stop("Could not write the cohort clarification notes.")
   result
