@@ -101,3 +101,43 @@ nameManualOutputs <- function(previous_outputs, module_dirs, output_context) {
   }
   invisible(destinations)
 }
+
+#' Bundle each audience's reports while preserving paths relative to its output root
+archiveManualOutputs <- function(paths, module_dirs, submodule_name, output_context) {
+  if (!length(paths)) {
+    return(invisible(NULL))
+  }
+  paths <- normalizePath(paths, mustWork = TRUE)
+  original_dir <- getwd()
+  on.exit(setwd(original_dir), add = TRUE)
+  for (target in c("global", "local")) {
+    output_dir <- module_dirs[[paste0(target, "_dir")]]
+    if (!dir.exists(output_dir)) {
+      next
+    }
+    output_dir <- normalizePath(output_dir, mustWork = TRUE)
+    prefix <- paste0(output_dir, "/")
+    members <- substring(paths[startsWith(paths, prefix)], nchar(prefix) + 1L)
+    if (!length(members)) {
+      next
+    }
+    report_dir <- file.path(output_dir, "reports")
+    dir.create(report_dir, recursive = TRUE, showWarnings = FALSE)
+    destination <- file.path(
+      report_dir, paste0(submodule_name, "_", target, "_", output_context, ".zip")
+    )
+    if (file.exists(destination)) {
+      stop("Manual archive filename collision: ", destination, call. = FALSE)
+    }
+    temporary_zip <- tempfile(".manual-", tmpdir = report_dir, fileext = ".zip")
+    on.exit(unlink(temporary_zip), add = TRUE)
+    setwd(output_dir)
+    # Prefix relative paths so archive members cannot be interpreted as options.
+    status <- utils::zip(temporary_zip, files = paste0("./", members), flags = "-q")
+    if (!identical(status, 0L) || !file.rename(temporary_zip, destination)) {
+      stop("Could not create manual output archive: ", destination, call. = FALSE)
+    }
+    message("Manual output archive: ", destination)
+  }
+  invisible(NULL)
+}

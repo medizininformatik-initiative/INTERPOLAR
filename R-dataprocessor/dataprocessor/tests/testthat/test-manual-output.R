@@ -61,6 +61,18 @@ test_that("only outputs written by the current run receive provenance", {
   expect_true(file.exists(old_report))
   expect_false(any(file.exists(c(new_report, local_report, overwritten_report))))
   expect_identical(readLines(paths[grepl("overwrite", paths)]), "replaced with new report content")
+  archiveManualOutputs(paths, module_dirs, "Example_Check", context)
+  archive_suffix <- paste0("_", context, ".zip")
+  global_zip <- file.path(global_reports, paste0("Example_Check_global", archive_suffix))
+  local_zip <- file.path(module_dirs$local_dir, "reports", paste0("Example_Check_local", archive_suffix))
+  expect_setequal(
+    utils::unzip(global_zip, list = TRUE)$Name,
+    file.path("reports", basename(paths[dirname(paths) == global_reports]))
+  )
+  expect_equal(
+    utils::unzip(local_zip, list = TRUE)$Name,
+    file.path("tables", basename(paths[dirname(paths) == local_tables]))
+  )
   expect_length(nameManualOutputs(getManualOutputFiles(module_dirs), module_dirs, context), 0L)
 })
 

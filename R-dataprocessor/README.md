@@ -66,6 +66,11 @@ Die bisherigen Berichtsnamen bleiben als Präfix erhalten. CSV-Namen innerhalb
 von ZIP-Archiven bleiben erhalten. Unveränderte Dateien früherer Läufe und
 Ausgaben automatischer Submodule werden nicht umbenannt. Bei einem Fehler des
 Submoduls wird kein Herkunftszusatz für einen abgeschlossenen Lauf vergeben.
+Pro Submodullauf gibt es zusätzlich je ein ZIP für die tatsächlich erzeugten
+globalen und lokalen Ergebnisse im jeweiligen Ordner `reports`. Der Archivname
+folgt dem Schema `<Submodul>_<global|local>_<Herkunftszusatz>.zip`. Die
+Einzeldateien bleiben verfügbar. Im ZIP bleiben ihre relativen Pfade erhalten.
+
 Die endgültigen Pfade werden nach dem Umbenennen im Laufprotokoll ausgegeben.
 
 ### Anpassung der Codes für Körpergröße, -gewicht und BMI

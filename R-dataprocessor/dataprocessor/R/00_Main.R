@@ -138,7 +138,8 @@ runSubmodules <- function(command_line_args = NULL) {
     })
 
     if (!is.null(manual_output_context)) {
-      nameManualOutputs(previous_outputs, MODULE_DIRS, manual_output_context)
+      named_outputs <- nameManualOutputs(previous_outputs, MODULE_DIRS, manual_output_context)
+      archiveManualOutputs(named_outputs, MODULE_DIRS, submodule_name, manual_output_context)
     }
 
     etlutils::removeSubmoduleName()
