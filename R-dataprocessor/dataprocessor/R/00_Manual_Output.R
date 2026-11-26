@@ -134,9 +134,7 @@ archiveManualOutputs <- function(paths, module_dirs, submodule_name, output_cont
     }
     report_dir <- file.path(output_dir, "reports")
     dir.create(report_dir, recursive = TRUE, showWarnings = FALSE)
-    destination <- file.path(
-      report_dir, paste0(submodule_name, "_", output_context, ".zip")
-    )
+    destination <- file.path(report_dir, paste0(submodule_name, "_", output_context, ".zip"))
     if (file.exists(destination)) {
       stop("Manual archive filename collision: ", destination, call. = FALSE)
     }
