@@ -48,10 +48,10 @@ Nach einem erfolgreichen manuellen Modullauf erhalten die neu geschriebenen oder
 Ausgaben, damit zusammengehörige Dateien zugeordnet werden können. Beispiel:
 
 ```text
-<Berichtsname>_run-2026-11-12_11-30-00Z_toolchain-2.1.0_pseudonymized_snapshot.xlsx
+<Berichtsname>_2026-11-12_11-30-00Z_toolchain-2.1.0_pseudonymized_snapshot.xlsx
 ```
 
-`run` bezeichnet den Start des manuellen Submoduls in UTC. `toolchain` ist die
+Der Zeitstempel bezeichnet den Start des manuellen Submoduls in UTC (`Z`). `toolchain` ist die
 Version des ausführenden Codes aus `release-version.txt`, auch bei älteren
 Datenbanken. Die Datenherkunft ist `live` (laufende Datenbank),
 `pseudonymized_snapshot` oder `snapshot` (nicht pseudonymisierter Snapshot). Der Eintrag `database_content_type` in

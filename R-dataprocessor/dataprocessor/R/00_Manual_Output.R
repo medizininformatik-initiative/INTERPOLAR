@@ -51,7 +51,7 @@ buildManualOutputContext <- function(database_name, database_content_type,
     stop("Invalid toolchain release version for output naming.", call. = FALSE)
   }
   paste0(
-    "run-", format(run_time, "%Y-%m-%d_%H-%M-%SZ", tz = "UTC"),
+    format(run_time, "%Y-%m-%d_%H-%M-%SZ", tz = "UTC"),
     "_toolchain-", release_version, "_", content_type
   )
 }

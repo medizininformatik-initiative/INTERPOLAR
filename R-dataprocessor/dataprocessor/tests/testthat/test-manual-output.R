@@ -5,7 +5,7 @@ test_that("manual filenames distinguish live, snapshot types and UTC run time", 
   }
   expect_identical(
     context("cds_hub_db"),
-    "run-2026-11-12_11-30-00Z_toolchain-2.1.0-rc.1_live"
+    "2026-11-12_11-30-00Z_toolchain-2.1.0-rc.1_live"
   )
   expect_match(
     context("ip_snapshot_20260903"),
@@ -53,7 +53,7 @@ test_that("only outputs written by the current run receive provenance", {
   local_report <- file.path(local_tables, "Example_Check_Result_local.xlsx")
   writeLines("new report", new_report)
   writeLines("local report", local_report)
-  context <- "run-2026-11-12_11-30-00Z_toolchain-2.1.0_live"
+  context <- "2026-11-12_11-30-00Z_toolchain-2.1.0_live"
   expect_message(paths <- nameManualOutputs(before, module_dirs, context), "Manual output:")
   expect_length(paths, 3L)
   expect_true(all(file.exists(paths)))
