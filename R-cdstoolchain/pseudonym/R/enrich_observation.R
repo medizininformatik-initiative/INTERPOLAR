@@ -12,9 +12,7 @@ SNAPSHOT_OBSERVATION_ANALYSIS_COLUMNS <- names(SNAPSHOT_OBSERVATION_ANALYSIS_DEF
 SNAPSHOT_OBSERVATION_SOURCE_COLUMNS <- c(
   "obs_code_system",
   "obs_code_code",
-  "obs_valuequantity_value",
-  "obs_valuequantity_code",
-  "obs_valuequantity_unit"
+  "obs_valuequantity_value"
 )
 
 SNAPSHOT_LOINC_CONVERSION_ISSUE_COLUMN <- ".snapshot_pseudonym_loinc_conversion_issue"
@@ -69,19 +67,24 @@ loadSnapshotLoincMapping <- function(input_repo_path) {
   mapping
 }
 
+getObservationUnitFields <- function(observation) {
+  fields <- c(code = "obs_valuequantity_code", unit = "obs_valuequantity_unit", system = "obs_valuequantity_system")
+  lapply(fields, function(column) {
+    if (column %in% names(observation)) {
+      as.character(observation[[column]])
+    } else {
+      rep(NA_character_, nrow(observation))
+    }
+  })
+}
+
 getObservationValueUnit <- function(observation, unit_cache = NULL) {
-  if ("obs_valuequantity_code" %in% names(observation)) {
-    unit_code <- observation[["obs_valuequantity_code"]]
-  } else {
-    unit_code <- rep(NA_character_, nrow(observation))
-  }
-  if ("obs_valuequantity_unit" %in% names(observation)) {
-    unit_display <- observation[["obs_valuequantity_unit"]]
-  } else {
-    unit_display <- rep(NA_character_, nrow(observation))
-  }
-  use_code <- !is.na(unit_code) & nzchar(unit_code) & etlutils::isValidUnit(unit_code, unit_cache = unit_cache)
-  data.table::fifelse(use_code, unit_code, unit_display)
+  fields <- getObservationUnitFields(observation)
+  # Converter support alone does not identify the code system of a unit code.
+  use_code <- fields$system %in% "http://unitsofmeasure.org" &
+    !is.na(fields$code) & nzchar(fields$code) &
+    etlutils::isValidUnit(fields$code, unit_cache = unit_cache)
+  data.table::fifelse(use_code, fields$code, fields$unit)
 }
 
 normalizeConversionFactor <- function(conversion_factor) {
@@ -112,11 +115,12 @@ getLoincUnitConversionReview <- function(table, table_name, unit_cache = NULL) {
   if (length(issue_rows) == 0) {
     return(emptyLoincUnitConversionReview())
   }
+  unit_fields <- getObservationUnitFields(table)
   review <- data.table::data.table(
     TABLE_NAME = table_name,
     LOINC_CODE = as.character(table[["obs_code_code"]][issue_rows]),
-    SOURCE_UNIT_CODE = as.character(table[["obs_valuequantity_code"]][issue_rows]),
-    SOURCE_UNIT_DISPLAY = as.character(table[["obs_valuequantity_unit"]][issue_rows]),
+    SOURCE_UNIT_CODE = unit_fields$code[issue_rows],
+    SOURCE_UNIT_DISPLAY = unit_fields$unit[issue_rows],
     USED_SOURCE_UNIT = as.character(getObservationValueUnit(table[issue_rows, ], unit_cache)),
     MAPPING_CONVERSION_UNIT = as.character(table[[SNAPSHOT_LOINC_MAPPING_UNIT_COLUMN]][issue_rows]),
     TARGET_UNIT = as.character(table[[SNAPSHOT_LOINC_TARGET_UNIT_COLUMN]][issue_rows]),
