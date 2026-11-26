@@ -413,39 +413,52 @@ buildSnapshotMedicationSourceQuery <- function(
     source_alias,
     exclude = c(system_column, code_column)
   )
-  normalized_reference <- snapshotNormalizedReferenceExpression(
-    connection,
-    reference_column,
-    source_alias
-  )
-  enrichment_select <- c(
-    if (system_column %in% enrichment_columns) {
-      paste0(
-        resolution_alias, ".medication_system AS ",
-        snapshotQuotedColumn(connection, system_column)
-      )
-    },
-    if (code_column %in% enrichment_columns) {
-      paste0(
-        resolution_alias, ".medication_code AS ",
-        snapshotQuotedColumn(connection, code_column)
-      )
+  has_resolution <- !is.null(medication_resolution_relation) &&
+    reference_column %in% source_fields
+  direct_columns <- c(spec[["direct_system_column"]], spec[["direct_code_column"]])
+  direct_values <- vapply(direct_columns, function(column) {
+    if (column %in% source_fields) {
+      paste0("NULLIF(", snapshotQuotedColumn(connection, column, source_alias), ", '')")
+    } else {
+      "NULL"
     }
-  )
+  }, character(1))
+  has_direct <- paste0("(", paste(paste0(direct_values, " IS NOT NULL"), collapse = " OR "), ")")
+  target_columns <- c(system_column, code_column)
+  resolved_values <- if (has_resolution) {
+    paste0(resolution_alias, c(".medication_system", ".medication_code"))
+  } else {
+    c("NULL", "NULL")
+  }
+  # Select the complete coding pair together, including a missing system or code.
+  enrichment_select <- vapply(seq_along(target_columns), function(index) {
+    paste0(
+      "CASE WHEN ", has_direct, " THEN ", direct_values[index],
+      " ELSE ", resolved_values[index], " END AS ",
+      snapshotQuotedColumn(connection, target_columns[index])
+    )
+  }, character(1))
+  enrichment_select <- enrichment_select[target_columns %in% enrichment_columns]
   issue_select <- paste0(
-    resolution_alias, ".issues AS ",
-    snapshotQuotedColumn(connection, SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN)
+    if (has_resolution) paste0(resolution_alias, ".issues") else "NULL",
+    " AS ", snapshotQuotedColumn(connection, SNAPSHOT_MEDICATION_REFERENCE_ISSUES_COLUMN)
   )
+  resolution_join <- if (has_resolution) {
+    paste0(
+      "LEFT JOIN ", medication_resolution_relation, " ", resolution_alias, "\n",
+      "  ON ", resolution_alias, ".root_medication_id = ",
+      snapshotNormalizedReferenceExpression(connection, reference_column, source_alias),
+      " AND NOT ", has_direct
+    )
+  } else {
+    ""
+  }
 
   paste0(
     "SELECT ",
-    paste(
-      c(source_columns, enrichment_select, issue_select),
-      collapse = ",\n  "
-    ),
+    paste(c(source_columns, enrichment_select, issue_select), collapse = ",\n  "),
     "\nFROM ", source_relation, " ", source_alias, "\n",
-    "LEFT JOIN ", medication_resolution_relation, " ", resolution_alias, "\n",
-    "  ON ", resolution_alias, ".root_medication_id = ", normalized_reference
+    resolution_join
   )
 }
 
@@ -721,23 +734,26 @@ getSnapshotStreamingSourceQuery <- function(
     reference_column <- medication_spec[["reference_column"]]
     relation_type <- plan_row[["SNAPSHOT_RELATION_TYPE"]]
     resolution_table_name <- medication_resolution_tables[[relation_type]]
-    if (
+    resolution_relation <- if (
       reference_column %in% described_columns &&
-      reference_column %in% source_fields &&
-      !is.null(resolution_table_name)
+        reference_column %in% source_fields &&
+        !is.null(resolution_table_name)
     ) {
-      return(list(
-        query = buildSnapshotMedicationSourceQuery(
-          connection,
-          source_relation,
-          source_fields,
-          snapshotQualifiedName(connection, resolution_table_name),
-          medication_spec,
-          medication_enrichment_columns
-        ),
-        medication_spec = medication_spec
-      ))
+      snapshotQualifiedName(connection, resolution_table_name)
+    } else {
+      NULL
     }
+    return(list(
+      query = buildSnapshotMedicationSourceQuery(
+        connection,
+        source_relation,
+        source_fields,
+        resolution_relation,
+        medication_spec,
+        medication_enrichment_columns
+      ),
+      medication_spec = medication_spec
+    ))
   }
 
   case_spec <- getSnapshotCaseEnrichmentSpec(base_table_name)
