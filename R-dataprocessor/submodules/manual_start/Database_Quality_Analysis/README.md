@@ -357,10 +357,12 @@ lookup row per case. IP membership and age are combined there; requested CSV
 buckets are assigned once per case. Each code/usage event joins this lookup once
 and expands only into its preselected buckets. The birthdate fallback adds one
 deduplicated Patient scan per resource query, not one query per case or CSV.
-No case lists or birthdates are transferred to R. Resource/code batches execute
-serially, with global count masking applied independently within each variant and
-full aggregate details in the local ZIP. Aggregate code catalogs and group
-metadata may be transferred to R; individual IDs and measurement values are not.
+No case lists or birthdates are transferred to R. Larger resource batches
+prepare their report data once in a session-local PostgreSQL table and process
+complete system/code groups in serial blocks. Where temporary tables are
+unavailable, the blocks query the source views. Smaller batches use a shared
+query. Global counts are masked independently within each variant, and the
+local ZIP retains the full aggregate details.
 
 ### Configuration and Coding fields
 

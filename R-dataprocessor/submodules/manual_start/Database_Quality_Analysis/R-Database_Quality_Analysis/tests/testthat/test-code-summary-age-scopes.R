@@ -110,7 +110,7 @@ test_that("CSV variants are selected before aggregation and written to the exist
     }
   }
   chunk_fixture <- fixture
-  chunk_fixture$config$code_summary_processing <- list(enabled = TRUE, max_codes_per_chunk = 2L)
+  chunk_fixture$config$code_summary_processing <- list(enabled = TRUE, target_rows_per_chunk = 6, max_codes_per_chunk = 2L)
   chunked <- createCodeSummaryReports(chunk_fixture$metadata, chunk_fixture$config,
     table_description = chunk_fixture$description,
     query_fun = function(query, lock_id) runCodeSummaryFixtureQuery(chunk_fixture, query)

@@ -170,14 +170,14 @@ codeSummaryAgeFixture <- function() {
   fixture
 }
 
-runCodeSummaryFixtureQuery <- function(fixture, query) {
+runCodeSummaryFixtureQuery <- function(fixture, query, setup_sql = character()) {
   container <- Sys.getenv("DQA_TEST_POSTGRES_CONTAINER")
   testthat::skip_if(!nzchar(container), "Set DQA_TEST_POSTGRES_CONTAINER for isolated PostgreSQL integration tests")
   sql_file <- tempfile(fileext = ".sql")
   error_file <- tempfile()
   on.exit(unlink(c(sql_file, error_file)), add = TRUE)
   writeLines(paste0(
-    codeSummaryFixtureSql(fixture), "\n", paste(fixture$extra_sql, collapse = "\n"),
+    codeSummaryFixtureSql(fixture), "\n", paste(c(fixture$extra_sql, setup_sql), collapse = "\n"),
     "\nCOPY (", query, ") TO STDOUT WITH CSV HEADER;"
   ), sql_file)
   output <- system2("docker", c(

@@ -53,6 +53,10 @@ test_that("code chunk planning isolates hot codes and never divides a code group
   expect_setequal(unlist(lapply(chunks, `[[`, "code")), catalog$code)
   expect_equal(sum(vapply(chunks, nrow, integer(1))), nrow(catalog))
   expect_true(all(vapply(chunks[-1], function(chunk) sum(chunk$source_rows) <= 10 && nrow(chunk) <= 2, logical(1))))
+  catalog[, source_partition := c("part_2", "part_1", "part_2", "part_2", "part_3")]
+  partitioned <- planCodeSummaryChunks(catalog, processing)
+  expect_equal(partitioned[[1L]]$code, "hot")
+  expect_true(all(vapply(partitioned[-1L], function(chunk) sum(chunk$source_rows) <= 10, logical(1))))
   expect_length(planCodeSummaryChunks(catalog[0], processing), 0L)
   expect_error(planCodeSummaryChunks(data.table::copy(catalog)[1, source_rows := Inf], processing), "row estimates")
   expect_error(parseCodeSummaryProcessing(list(target_rows_per_chunk = 0)), "positive integer")
@@ -104,7 +108,7 @@ test_that("chunked automatic SNOMED statistics preserve non-finite values and un
   expect_equal(local[code == "386661006" & unit_system == "urn:other-units" & row_type == "detail", low], "36.0")
 })
 
-test_that("measurement chunks share preparation and keep all counts and exact statistics", {
+test_that("small batches skip the catalog and retain the shared measurement query", {
   fixture <- codeSummarySnomedFixture()
   fixture$config$code_summary_exports$variants <- "all"
   fixture$config$code_summary_query_batching <- "resource"
@@ -125,10 +129,12 @@ test_that("measurement chunks share preparation and keep all counts and exact st
   queries <- character()
   actual <- run()
   expectCodeSummaryTablesEqual(actual, reference)
-  # Four populated resources each need catalog, totals and one detail query.
-  # Observation counts and statistics share that query instead of adding a 13th.
-  expect_length(queries, 12L)
-  shared <- queries[grepl("scoped_events AS MATERIALIZED", queries, fixed = TRUE)]
+  # Each resource needs a bounded probe and a shared query.
+  expect_length(queries, 8L)
+  expect_equal(sum(grepl("code size probe", queries, fixed = TRUE)), 4L)
+  expect_false(any(grepl("code catalog", queries, fixed = TRUE)))
+  shared <- queries[grepl("scoped_events AS MATERIALIZED", queries, fixed = TRUE) &
+    grepl('FROM "pg_temp"."observation"', queries, fixed = TRUE)]
   expect_length(shared, 1L)
   expect_equal(lengths(regmatches(shared, gregexpr('FROM "pg_temp"."observation"', shared, fixed = TRUE))), 1L)
   expect_false(any(grepl("/* INTERPOLAR DQA code statistics */", queries, fixed = TRUE)))
@@ -137,4 +143,47 @@ test_that("measurement chunks share preparation and keep all counts and exact st
   expect_equal(empty$count, 1)
   expect_true(is.na(empty$mean))
   expect_true(is.na(empty$median))
+})
+
+test_that("staged chunks recover detailed and version-independent reports from the same events", {
+  fixture <- codeSummaryRangeFixture()
+  config <- fixture$config
+  config$code_summary_exports$variants <- NULL
+  exports <- parseCodeSummaryExports(config$code_summary_exports)
+  groups <- buildCodeSummaryCaseGroupsQuery(fixture$metadata, exports, TRUE, fixture$description)
+  all_sources <- resolveCodeSummarySources(fixture$metadata, config, fixture$description)
+  all_links <- resolveCodeSummaryMedicationLinks(fixture$metadata, fixture$description, config)
+  variants <- c("all_cases", "interpolar_cases")
+  for (clinical in c(TRUE, FALSE)) {
+    sources <- Filter(function(source) {
+      if (clinical) source$resource == "Observation" else startsWith(source$resource, "Medication")
+    }, all_sources)
+    links <- if (clinical) list() else all_links
+    makeQuery <- function(mode) buildCodeSummaryQuery(sources, links, config$code_summary_systems,
+      config$code_summary_report_types,
+      case_groups_query = groups, export_variants = variants,
+      query_mode = mode, include_no_version = TRUE
+    )
+    expected <- runCodeSummaryFixtureQuery(fixture, makeQuery("combined"))
+    setup_sql <- paste0(buildCodeSummaryStageCommands(makeQuery("stage")), ";")
+    catalog <- runCodeSummaryFixtureQuery(fixture, buildCodeSummaryStageCatalog(), setup_sql)
+    catalog[, has_non_loinc := has_non_loinc %in% c("t", "TRUE")]
+    expect_false(anyDuplicated(catalog[, .(system, code)]) > 0L)
+    totals_query <- buildStagedCodeSummaryPass("totals", clinical, clinical,
+      has_non_loinc = !clinical || any(catalog$has_non_loinc)
+    )
+    totals <- runCodeSummaryFixtureQuery(fixture, totals_query, setup_sql)
+    details <- lapply(if (clinical) variants else NA_character_, function(scope) {
+      query <- buildStagedCodeSummaryPass("details_statistics", clinical, clinical,
+        catalog,
+        measurements = clinical, scope = scope
+      )
+      runCodeSummaryFixtureQuery(fixture, query, setup_sql)
+    })
+    actual <- data.table::rbindlist(c(list(totals), details))
+    order <- setdiff(names(expected), c("median", "q1", "q3", "mean", "sd", "minimum", "maximum"))
+    data.table::setorderv(expected, order)
+    data.table::setorderv(actual, order)
+    expect_equal(actual, expected, tolerance = 1e-12)
+  }
 })

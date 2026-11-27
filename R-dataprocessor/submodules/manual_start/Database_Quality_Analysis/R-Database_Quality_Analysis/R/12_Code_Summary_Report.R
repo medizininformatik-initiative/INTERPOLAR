@@ -6,13 +6,14 @@
 createCodeSummaryReports <- function(metadata, config, query_fun = etlutils::dbGetReadOnlyQuery,
                                      table_description = NULL) {
   buildCodeSummaryReports(metadata, config, query_fun, table_description,
-    export_variants = c("all_cases", "interpolar_cases"), include_no_version = TRUE
+    export_variants = c("all_cases", "interpolar_cases"), include_no_version = TRUE,
+    session_fun = if (missing(query_fun)) etlutils::dbWithOutputSession else NULL
   )
 }
 
 # Build the result tables for the scopes supplied by the caller.
 buildCodeSummaryReports <- function(metadata, config, query_fun, table_description = NULL,
-                                    export_variants, include_no_version = FALSE) {
+                                    export_variants, include_no_version = FALSE, session_fun = NULL) {
   started <- Sys.time()
   logProgress("Code summary: resolving configured sources and available database columns.")
   if (is.null(table_description)) {
@@ -86,18 +87,38 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
   } else {
     lapply(stats::setNames(report_names, report_names), function(report) sources[source_reports == report])
   }
+  processing <- parseCodeSummaryProcessing(config$code_summary_processing)
   query_rows <- lapply(seq_along(batches), function(index) {
+    if (!length(export_variants)) return(data.table::data.table())
     batch_sources <- batches[[index]]
     # Medication and its usage sources stay together. Other resources never
     # scan medication views; each actual resource view is read by one batch.
     batch_links <- if (any(vapply(batch_sources, function(source) source$resource %in% c("Medication", link_resources), logical(1)))) links else list()
-    if (!is.null(config$code_summary_processing) && isTRUE(parseCodeSummaryProcessing(config$code_summary_processing)$enabled)) {
-      return(runCodeSummaryChunks(batch_sources, batch_links, config, report_types,
-        case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
-        case_groups_query = case_groups_query, export_variants = export_variants,
-        label = paste0(names(batches)[[index]], " (", index, "/", length(batches), ")"), query_fun = query_fun,
-        include_no_version = include_no_version
-      ))
+    label <- paste0("Code summary SQL ", names(batches)[[index]], " (", index, "/", length(batches), ")")
+    lock_id <- getDatabaseQualityAnalysisLockId(config, "calculate code summary")
+    if (processing$enabled) {
+      size <- runLoggedQuery(
+        buildCodeSummarySizeProbe(batch_sources, batch_links, processing$target_rows_per_chunk),
+        query_fun = query_fun, config = config, label = paste0(label, "; checking source size"), lock_id = lock_id
+      )
+      if (as.numeric(size$source_rows[[1L]]) > processing$target_rows_per_chunk) {
+        if (include_no_version && !is.null(session_fun)) {
+          staged <- session_fun(function(connection) {
+            runStagedCodeSummary(connection, batch_sources, batch_links, config, report_types,
+              case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
+              case_groups_query = case_groups_query, export_variants = export_variants,
+              label = label, processing = processing
+            )
+          }, lock_id = lock_id)
+          if (!is.null(staged)) return(staged)
+        }
+        return(runCodeSummaryChunks(batch_sources, batch_links, config, report_types,
+          case_scope_query = if (is.null(case_groups_query)) case_scope_query else NULL,
+          case_groups_query = case_groups_query, export_variants = export_variants,
+          label = paste0(names(batches)[[index]], " (", index, "/", length(batches), ")"),
+          query_fun = query_fun, include_no_version = include_no_version
+        ))
+      }
     }
     query <- buildCodeSummaryQuery(
       batch_sources, batch_links, config$code_summary_systems, report_types,
@@ -109,11 +130,8 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
     data.table::as.data.table(runLoggedQuery(
       query,
       query_fun = query_fun, config = config,
-      label = paste0(
-        "Code summary SQL ", names(batches)[[index]], " (", index, "/", length(batches),
-        "; global/local and configured case scopes)"
-      ),
-      lock_id = getDatabaseQualityAnalysisLockId(config, "calculate code summary")
+      label = paste0(label, "; global/local and configured case scopes"),
+      lock_id = lock_id
     ))
   })
   rows <- data.table::rbindlist(query_rows, use.names = TRUE, fill = TRUE)
@@ -191,7 +209,7 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
       "Code-group processing: enabled=", config$code_summary_processing$enabled,
       "; target rows=", config$code_summary_processing$target_rows_per_chunk,
       "; max codes=", config$code_summary_processing$max_codes_per_chunk,
-      "; hot codes remain intact; counts and quantiles are exact."
+      "; complete code groups per case scope; counts and quantiles are exact."
     ),
     "Systems (exact URI filters):",
     vapply(names(config$code_summary_systems), function(name) {

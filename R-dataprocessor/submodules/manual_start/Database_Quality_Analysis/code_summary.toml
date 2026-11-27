@@ -7,11 +7,11 @@ age_column = "enc_age_at_admission"
 # If the column is absent, derive completed years from period/start and birthDate.
 fallback_to_birthdate = true
 
-# Share prepared data within each resource query by default.
-# Optional code-group batches keep each system/code pair together.
+# Probe each resource batch and process large inputs in serial code blocks.
+# Each block keeps complete system/code groups within each report scope.
 [processing]
-enabled = false
-target_rows_per_chunk = 500000
+enabled = true
+target_rows_per_chunk = 2000000
 max_codes_per_chunk = 500
 
 [systems]

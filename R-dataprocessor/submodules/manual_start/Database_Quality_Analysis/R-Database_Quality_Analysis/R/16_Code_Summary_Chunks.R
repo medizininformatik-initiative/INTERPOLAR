@@ -1,3 +1,16 @@
+# Stop counting as soon as the source-row budget is exceeded. Coding and link
+# mappings can share a view, so each physical row is probed at most once.
+buildCodeSummarySizeProbe <- function(sources, links, target_rows) {
+  views <- unique(vapply(c(sources, links), function(source) {
+    quoteTable(source$schema, source$view)
+  }, character(1)))
+  paste0(
+    "/* INTERPOLAR DQA code size probe */ SELECT COUNT(*) AS source_rows FROM (",
+    paste0("SELECT 1 FROM ", views, collapse = " UNION ALL "),
+    " LIMIT ", format(target_rows + 1, scientific = FALSE, trim = TRUE), ") probe"
+  )
+}
+
 #' Plan serial batches of complete code groups, isolating oversized codes
 planCodeSummaryChunks <- function(catalog, processing) {
   if (!nrow(catalog)) return(list())
@@ -6,7 +19,15 @@ planCodeSummaryChunks <- function(catalog, processing) {
   if (anyNA(catalog$source_rows) || any(!is.finite(catalog$source_rows)) || any(catalog$source_rows < 0)) {
     stop("Invalid code catalog row estimates.", call. = FALSE)
   }
-  data.table::setorderv(catalog, c("source_rows", "system", "code"), c(-1L, 1L, 1L))
+  # Keep oversized codes first so they never interrupt packing the smaller
+  # groups from adjacent partitions.
+  catalog[, oversized := source_rows > processing$target_rows_per_chunk]
+  partition_column <- intersect("source_partition", names(catalog))
+  data.table::setorderv(
+    catalog, c("oversized", partition_column, "source_rows", "system", "code"),
+    c(-1L, rep(1L, length(partition_column)), -1L, 1L, 1L)
+  )
+  catalog[, oversized := NULL]
   chunks <- list()
   indexes <- integer()
   size <- 0
@@ -89,4 +110,136 @@ runCodeSummaryChunks <- function(sources, links, config, report_types, case_scop
     data.table::setorderv(result, c("report_scope", "export_target", "report", "system", "coding_path", "row_type", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system"), na.last = TRUE)
   }
   result
+}
+
+isClinicalCodeSummary <- function(sources, links) {
+  medication_resources <- c("Medication", "MedicationRequest", "MedicationAdministration", "MedicationStatement")
+  !length(links) && !any(vapply(sources, function(source) source$resource %in% medication_resources, logical(1)))
+}
+
+# Route each system/code pair to one temporary partition during the initial write.
+# The frequency catalog can then pack nearby code groups without rescanning the
+# entire prepared data set for each batch.
+buildCodeSummaryStageCommands <- function(stage_query) {
+  partitions <- seq_len(16L) - 1L
+  c(
+    paste0("CREATE TEMP TABLE dqa_code_event_shape AS ", stage_query, " WITH NO DATA"),
+    "CREATE TEMP TABLE dqa_code_events (LIKE pg_temp.dqa_code_event_shape) PARTITION BY HASH (system,code)",
+    sprintf(
+      "CREATE TEMP TABLE dqa_code_events_%d PARTITION OF pg_temp.dqa_code_events FOR VALUES WITH (MODULUS %d, REMAINDER %d)",
+      partitions, length(partitions), partitions
+    ),
+    paste0("INSERT INTO pg_temp.dqa_code_events ", stage_query)
+  )
+}
+
+buildCodeSummaryStageCatalog <- function() {
+  paste(
+    "SELECT c.*,r.relname AS source_partition FROM (",
+    "SELECT tableoid,system,code,SUM(cardinality(report_scopes))::double precision AS source_rows,",
+    "MAX(CASE WHEN value IS NOT NULL THEN 1 ELSE 0 END) AS measurement,",
+    "BOOL_OR((report='Observation' AND system='http://loinc.org') IS NOT TRUE) AS has_non_loinc",
+    "FROM pg_temp.dqa_code_events WHERE NOT unresolved GROUP BY tableoid,system,code",
+    ") c JOIN pg_catalog.pg_class r ON r.oid=c.tableoid"
+  )
+}
+
+# Resolve sources once per reporting session. Store scope membership with each
+# event, expand it only for the current pass, and leave all raw rows in PostgreSQL.
+runStagedCodeSummary <- function(connection, sources, links, config, report_types,
+                                 case_scope_query, case_groups_query, export_variants, label, processing) {
+  capability <- DBI::dbGetQuery(connection, paste(
+    "SELECT has_database_privilege(current_database(),'TEMP')",
+    "AND current_setting('transaction_read_only')='off' AS can_stage"
+  ))
+  if (!isTRUE(capability$can_stage[[1L]])) {
+    logProgress(label, ": temporary tables unavailable; using serial queries on the source views.")
+    return(NULL)
+  }
+
+  runPass <- function(query, suffix, execute = FALSE) {
+    runLoggedQuery(
+      query,
+      config = config, label = paste0(label, "; ", suffix),
+      query_fun = function(query, lock_id) {
+        if (execute) invisible(DBI::dbExecute(connection, query)) else data.table::as.data.table(DBI::dbGetQuery(connection, query))
+      }
+    )
+  }
+  stage_query <- buildCodeSummaryQuery(sources, links, config$code_summary_systems, report_types,
+    case_scope_query = case_scope_query, case_groups_query = case_groups_query,
+    export_variants = export_variants, query_mode = "stage", include_no_version = TRUE
+  )
+  commands <- buildCodeSummaryStageCommands(stage_query)
+  DBI::dbExecute(connection, paste(commands[-length(commands)], collapse = ";\n"), immediate = TRUE)
+  runPass(utils::tail(commands, 1L), "preparing scoped events", execute = TRUE)
+  runPass("ANALYZE pg_temp.dqa_code_events", "analyzing scoped events", execute = TRUE)
+  catalog <- runPass(buildCodeSummaryStageCatalog(), "code frequencies")
+  chunks <- planCodeSummaryChunks(catalog, processing)
+  logProgress(label, ": ", nrow(catalog), " system/code groups in ", length(chunks), " serial chunks.")
+  has_observations <- any(vapply(sources, function(source) source$resource == "Observation", logical(1)))
+  clinical_cases_only <- isClinicalCodeSummary(sources, links) && !"all" %in% export_variants
+  # Cross-code totals still need complete resource identities. They cannot
+  # be recovered by summing the per-code patient, case or resource counts.
+  rows <- list(runPass(
+    buildStagedCodeSummaryPass(
+      "totals", has_observations, clinical_cases_only,
+      has_non_loinc = !clinical_cases_only || any(catalog$has_non_loinc)
+    ),
+    "exact cross-code totals and diagnostics"
+  ))
+  for (index in seq_along(chunks)) {
+    keys <- chunks[[index]]
+    # A hot code can still be split by report scope: every statistic and
+    # distinct count is scoped, so each exact group remains in a single pass.
+    scopes <- if (sum(keys$source_rows) > processing$target_rows_per_chunk) export_variants else NA_character_
+    for (scope in scopes) {
+      rows[[length(rows) + 1L]] <- runPass(
+        buildStagedCodeSummaryPass(
+          "details_statistics", has_observations, clinical_cases_only,
+          keys, any(keys$measurement == 1L), scope
+        ),
+        paste0(
+          "chunk ", index, "/", length(chunks), "; ", nrow(keys), " codes",
+          if (!is.na(scope)) paste0("; ", scope)
+        )
+      )
+    }
+  }
+  data.table::rbindlist(rows, use.names = TRUE, fill = TRUE)
+}
+
+buildStagedCodeSummaryPass <- function(mode, has_observations, clinical_cases_only,
+                                       keys = NULL, measurements = FALSE, scope = NA_character_,
+                                       has_non_loinc = is.null(keys$has_non_loinc) || any(keys$has_non_loinc)) {
+  partitions <- unique(keys$source_partition)
+  from <- "pg_temp.dqa_code_events e"
+  if (length(partitions)) {
+    tables <- vapply(partitions, function(partition) quoteTable("pg_temp", partition), character(1))
+    from <- if (length(tables) == 1L) {
+      paste(tables, "e")
+    } else {
+      paste0("(", paste("SELECT * FROM", tables, collapse = " UNION ALL "), ") e")
+    }
+  }
+  scope_column <- "v.report_scope"
+  filters <- character()
+  if (!is.na(scope)) {
+    scope_column <- paste0(quoteSqlString(scope), "::text AS report_scope")
+    filters <- paste0(quoteSqlString(scope), "=ANY(e.report_scopes)")
+  } else {
+    from <- paste(from, "CROSS JOIN LATERAL unnest(e.report_scopes) v(report_scope)")
+  }
+  if (!is.null(keys)) {
+    filters <- c(filters, buildCodeSummaryKeyPredicate(keys, "e.system", "e.code"))
+  }
+  where <- if (length(filters)) paste("WHERE", paste(filters, collapse = " AND ")) else ""
+  # Materialize bounded chunks once. Oversized per-scope chunks and totals
+  # avoid a second on-disk copy, even if their scans must be repeated.
+  materialized <- !is.null(keys) && is.na(scope)
+  ctes <- paste0(
+    "scoped_events AS ", if (materialized) "MATERIALIZED" else "NOT MATERIALIZED",
+    " (SELECT ", scope_column, ",e.* FROM ", from, " ", where, ")"
+  )
+  buildCodeSummaryNoVersionQuery(ctes, mode, measurements, has_observations, clinical_cases_only, has_non_loinc)
 }

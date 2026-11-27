@@ -1221,6 +1221,24 @@ dbGetReadOnlyQuery <- function(query, params = NULL, lock_id = NULL) {
   dbGetQuery(query, params = params, lock_id = lock_id, readonly = TRUE)
 }
 
+#' Run an operation in one reporting database session
+#'
+#' The session uses the output schema and is closed when the operation finishes.
+#' Session-local temporary tables are removed when the connection closes.
+#'
+#' @param process Function receiving the open DBI connection.
+#' @param lock_id Optional database lock ID.
+#' @return The result of `process`.
+#' @export
+dbWithOutputSession <- function(process, lock_id = NULL) {
+  run <- function() {
+    connection <- dbGetConnection(readonly = TRUE)
+    on.exit(DBI::dbDisconnect(connection), add = TRUE)
+    process(connection)
+  }
+  dbWithLock(lock_id, readonly = TRUE, run())
+}
+
 #' Read a Table from a PostgreSQL Database
 #'
 #' This function reads a table from a PostgreSQL database and returns it as

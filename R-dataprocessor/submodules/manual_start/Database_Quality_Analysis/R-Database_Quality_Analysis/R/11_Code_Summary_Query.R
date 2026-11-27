@@ -23,10 +23,10 @@ codeSummaryReferenceSql <- function(expression, resource) {
 buildCodeSummaryQuery <- function(sources, links, systems, report_types,
                                   case_scope_query = NULL, case_groups_query = NULL,
                                   export_variants = c("all", "filtered"),
-                                  query_mode = c("combined", "catalog", "details", "statistics", "totals", "rare", "details_statistics"),
+                                  query_mode = c("combined", "catalog", "details", "statistics", "totals", "rare", "details_statistics", "stage"),
                                   code_keys = NULL, rare_groups = NULL, include_no_version = FALSE) {
   query_mode <- match.arg(query_mode)
-  include_no_version <- include_no_version && query_mode %in% c("combined", "details", "details_statistics", "totals")
+  include_no_version <- include_no_version && query_mode %in% c("combined", "details", "details_statistics", "totals", "stage")
   if (!is.null(code_keys) && !nrow(code_keys)) return(NA_character_)
   if (query_mode == "rare" && (is.null(rare_groups) || !nrow(rare_groups))) return(NA_character_)
   if (query_mode %in% c("catalog", "totals")) {
@@ -42,7 +42,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
   report_types <- parseCodeSummaryReportTypes(report_types, names(systems))
   measurement_sources <- vapply(sources, function(source) isTRUE(source$measurement), logical(1))
   chunked_codes <- !is.null(code_keys) && nrow(code_keys) > 0L
-  include_diagnostics <- query_mode %in% c("combined", "totals")
+  include_diagnostics <- query_mode %in% c("combined", "totals", "stage")
   medication_reports <- unique(unlist(lapply(Filter(function(source) {
     source$resource == "Medication"
   }, sources), `[[`, "reports"), use.names = FALSE))
@@ -97,15 +97,11 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
   codeFilterSql <- function(source, alias = "s") {
     # Constant membership lists avoid a nested-loop semi join over the chunk
     # catalog for every source row when PostgreSQL underestimates source sizes.
-    system_filters <- vapply(unique(code_keys$system), function(system) {
-      codes <- code_keys$code[code_keys$system == system]
-      paste0(
-        "(", codeSummaryFieldSql(source$fields, "system", alias), " = ", quoteSqlString(system),
-        " AND ", codeSummaryFieldSql(source$fields, "code", alias), " IN (",
-        paste(vapply(codes, quoteSqlString, character(1)), collapse = ","), "))"
-      )
-    }, character(1))
-    paste0("(", paste(system_filters, collapse = " OR "), ")")
+    buildCodeSummaryKeyPredicate(
+      code_keys,
+      codeSummaryFieldSql(source$fields, "system", alias),
+      codeSummaryFieldSql(source$fields, "code", alias)
+    )
   }
   if (chunked_codes) {
     ctes <- c(ctes, buildCodeSummaryKeyCte(code_keys))
@@ -321,10 +317,11 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
       catalog_counts, ") counts GROUP BY system,code ORDER BY system,code"
     ))
   }
-  # Keep each supplied range tuple together. DISTINCT removes flattened Coding
-  # duplicates; counts and statistics apply their own resource-level deduplication.
+  # Clinical counts and statistics deduplicate their own resource/value keys.
+  # Medication reference resolution also uses the normalized Coding rows.
+  deduplicate_codings <- query_mode != "stage" || !isClinicalCodeSummary(sources, links)
   ctes <- c(ctes, paste0(
-    "codings AS (SELECT DISTINCT report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system,value FROM (",
+    "codings AS (SELECT ", if (deduplicate_codings) "DISTINCT ", "report,system,coding_path,version,code,kind,own_id,pid,case_id,unit,unit_system,low,high,range_type,range_type_system,age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system,value FROM (",
     paste(code_selects, collapse = " UNION ALL "),
     ") codes WHERE report IS NOT NULL AND code IS NOT NULL AND own_id IS NOT NULL)"
   ))
@@ -365,7 +362,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
   )
   event_tail <- paste0(
     "c.kind || '/' || c.own_id AS event_key, c.kind,c.pid,c.case_id,",
-    if (query_mode %in% c("combined", "statistics", "details_statistics")) "c.value" else "NULL::double precision", " AS value, "
+    if (query_mode %in% c("combined", "statistics", "details_statistics", "stage")) "c.value" else "NULL::double precision", " AS value, "
   )
   base_event_select <- paste0(
     "SELECT c.kind AS report, ", event_columns,
@@ -448,13 +445,30 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
     # without an event emit an empty array, preserving the LEFT-join result.
     scope_array <- paste0("COALESCE(s.report_scopes,", fallback_scopes, ")")
     if (filter_cases) scope_array <- paste0("CASE WHEN e.count_key IS NULL THEN ARRAY[]::text[] ELSE ", scope_array, " END")
-    scoped_events <- paste0(
-      "SELECT v.report_scope,e.* FROM raw_events e ", if (filter_cases) "FULL" else "LEFT",
-      " JOIN scope_buckets s ON s.case_id=e.case_id ",
-      "CROSS JOIN LATERAL unnest(", scope_array, ") v(report_scope)"
+    scoped_join <- paste0(
+      " FROM raw_events e ", if (filter_cases) "FULL" else "LEFT",
+      " JOIN scope_buckets s ON s.case_id=e.case_id "
     )
+    if (query_mode == "stage") {
+      scoped_events <- paste0(
+        "SELECT ", scope_array, " AS report_scopes,e.*", scoped_join,
+        "WHERE cardinality(", scope_array, ") > 0"
+      )
+    } else {
+      scoped_events <- paste0(
+        "SELECT v.report_scope,e.*", scoped_join,
+        "CROSS JOIN LATERAL unnest(", scope_array, ") v(report_scope)"
+      )
+    }
   } else {
-    scoped_events <- "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
+    scoped_events <- if (query_mode == "stage") {
+      "SELECT ARRAY['all']::text[] AS report_scopes,e.* FROM raw_events e"
+    } else {
+      "SELECT 'all'::text AS report_scope,e.* FROM raw_events e"
+    }
+  }
+  if (query_mode == "stage") {
+    return(paste0("WITH ", paste(ctes, collapse = ",\n"), "\n", scoped_events))
   }
   # Reuse only the selected chunk's resolved events for counts and statistics.
   # Share the resolved event stream across counts, measurements and totals
