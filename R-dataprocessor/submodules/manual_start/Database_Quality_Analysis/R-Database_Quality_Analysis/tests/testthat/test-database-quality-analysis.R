@@ -467,14 +467,16 @@ test_that("database quality analysis text value summary query counts values", {
 
   result <- buildTextValueSummaryQuery(table_metadata, c("obs_id", "obs_code_code"), "obs_id")
 
-  expect_match(result, "COUNT(DISTINCT \"resource_values\".\"resource_id\")::integer", fixed = TRUE)
+  expect_match(result, "COUNT(DISTINCT s.resource_key)", fixed = TRUE)
   expect_match(result, "'FHIR' AS \"TABLE_FAMILY\"", fixed = TRUE)
   expect_match(result, "'observation' AS \"TABLE_NAME\"", fixed = TRUE)
-  expect_match(result, "CROSS JOIN LATERAL", fixed = TRUE)
-  expect_match(result, "('obs_id', CASE WHEN \"source_row\".\"obs_id\" IS NULL", fixed = TRUE)
-  expect_match(result, "('obs_code_code', CASE WHEN \"source_row\".\"obs_code_code\" IS NULL", fixed = TRUE)
-  expect_match(result, "FROM \"db2dataprocessor_out\".\"v_observation_last_version\"", fixed = TRUE)
-  expect_match(result, "GROUP BY \"resource_values\".\"column_name\", \"resource_values\".\"value\"", fixed = TRUE)
+  expect_match(result, "WHERE v.value IS NOT NULL", fixed = TRUE)
+  expect_match(result, "GROUP BY GROUPING SETS", fixed = TRUE)
+  expect_match(result, "t.total - COALESCE(v.count, 0)", fixed = TRUE)
+  expect_equal(lengths(regmatches(result, gregexpr(
+    'FROM "db2dataprocessor_out"."v_observation_last_version"', result,
+    fixed = TRUE
+  ))), 1L)
 })
 
 test_that("database quality analysis statistic value summary query batches aggregates", {
@@ -1955,4 +1957,21 @@ test_that("database quality analysis value summary writer handles relative outpu
   expect_true(file.exists(file_name))
   expect_true(grepl(normalizePath(relative_root, mustWork = TRUE), file_name, fixed = TRUE))
   expect_equal(utils::unzip(file_name, list = TRUE)$Name, "FHIR/observation.csv")
+})
+
+
+test_that("disabling code reports permits a missing code summary TOML", {
+  config_env <- new.env(parent = emptyenv())
+  config_env$INCLUDE_CODE_SUMMARY <- FALSE
+  config_env$CODE_SUMMARY_CONFIG_FILE <- tempfile(fileext = ".toml")
+
+  config <- getConfig(envir = config_env, command_arguments = character())
+  expect_false(config$include_code_summary)
+  expect_null(config$code_summary_sources)
+
+  config_env$INCLUDE_CODE_SUMMARY <- TRUE
+  expect_error(
+    getConfig(envir = config_env, command_arguments = character()),
+    "Code summary TOML file not found"
+  )
 })

@@ -1,0 +1,24 @@
+# Column batches share source reads; separate from availability COUNT_BATCH_SIZE.
+VALUE_SUMMARY_COLUMN_BATCH_SIZE = 100
+# Code-group batch targets are in [processing] in code_summary.toml.
+
+# Optional additions to database_quality_analysis_config.toml.
+INCLUDE_CODE_SUMMARY = true
+
+# Process resources separately and share prepared data within each query.
+# Medication and its usage resources stay together; scopes/targets share each pass.
+# CODE_SUMMARY_QUERY_BATCHING = "resource"  # "all" is available for comparison.
+
+# Shared DQA logging: periodic elapsed-time messages while SQL is running.
+# PROGRESS_INTERVAL_SECONDS = 60  # 0 disables the periodic timer.
+# Sources, systems, report types and fields are configured in code_summary.toml here.
+# A mapped numeric value column enables measurement statistics automatically.
+# Optional source-level measurement = true/false overrides this detection there.
+# To use a different file, select it here (relative to the repository root or absolute).
+# CODE_SUMMARY_CONFIG_FILE = "path/to/code_summary.toml"
+
+# Optional alternative Table Description (normally the installed cds2db file).
+# CODE_SUMMARY_TABLE_DESCRIPTION = "path/to/Table_Description.xlsx"
+
+# Age uses enc_age_at_admission on the main Encounter if present; otherwise the
+# default birthdate fallback derives completed years from period/start and birthDate.

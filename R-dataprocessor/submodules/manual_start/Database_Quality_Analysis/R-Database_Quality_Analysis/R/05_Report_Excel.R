@@ -57,8 +57,10 @@ fillCountAndDateRangeColumns <- function(
     config = config
   )
   if (!is.na(count_query$query)) {
-    count_result <- query_fun(
+    count_result <- runLoggedQuery(
       count_query$query,
+      query_fun = query_fun, config = config,
+      label = paste0("Availability counts ", lock_label, "; ", length(data_column_batch), " columns"),
       lock_id = getDatabaseQualityAnalysisLockId(
         config,
         paste0("calculate database quality analysis counts for ", lock_label)
@@ -76,8 +78,10 @@ fillCountAndDateRangeColumns <- function(
       row_filter_condition = row_filter_condition
     )
     if (!is.na(date_range_query$query)) {
-      date_range_result <- query_fun(
+      date_range_result <- runLoggedQuery(
         date_range_query$query,
+        query_fun = query_fun, config = config,
+        label = paste0("Value date ranges ", lock_label, "; ", length(data_column_batch), " columns"),
         lock_id = getDatabaseQualityAnalysisLockId(
           config,
           paste0(
@@ -470,6 +474,7 @@ writeExcelFile <- function(
       ".xlsx"
     )
   )
+  write_started <- Sys.time()
   logProgress("Writing Excel report to ", file_name, ".")
 
   workbook <- openxlsx::createWorkbook()
@@ -502,7 +507,7 @@ writeExcelFile <- function(
     )
   }
   openxlsx::saveWorkbook(workbook, file_name, overwrite = TRUE)
-  logProgress("Excel report written to ", file_name, ".")
+  logProgress("Excel report written to ", file_name, " in ", formatDuration(write_started), ".")
   invisible(file_name)
 }
 
@@ -584,13 +589,34 @@ createReport <- function(config = getConfig()) {
   if (!file.exists(value_summary_file)) {
     stop("Value summary archive was not created: ", value_summary_file, call. = FALSE)
   }
+  code_summary_file <- NULL
+  local_code_summary_file <- NULL
+  if (isTRUE(config$include_code_summary)) {
+    logProgress("Calculating database quality analysis code summary.")
+    code_summaries <- createCodeSummaryReports(metadata, config)
+    code_summary_file <- writeCodeSummaryArchive(
+      code_summaries, config$output_filename,
+      timestamp = analysis_start_time
+    )
+    if (!file.exists(code_summary_file)) {
+      stop("Code summary archive was not created: ", code_summary_file, call. = FALSE)
+    }
+    local_code_summary_file <- writeCodeSummaryArchive(
+      code_summaries, config$output_filename,
+      timestamp = analysis_start_time, target = "local"
+    )
+    if (!file.exists(local_code_summary_file)) {
+      stop("Local code summary archive was not created: ", local_code_summary_file, call. = FALSE)
+    }
+  }
   logProgress(
     "Finished report in ",
     formatDuration(analysis_start_time),
     ". Outputs: ",
     output_file,
     ", ",
-    value_summary_file
+    value_summary_file,
+    if (!is.null(code_summary_file)) paste0(", ", code_summary_file, ", ", local_code_summary_file)
   )
 
   invisible(result)

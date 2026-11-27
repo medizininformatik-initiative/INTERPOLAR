@@ -32,7 +32,8 @@ parseCommandLineConfig <- function(command_arguments = NULL) {
       "view_postfix" = "VIEW_POSTFIX",
       "value_import_datetime_column" = "VALUE_IMPORT_DATETIME_COLUMN",
       "output_filename" = "OUTPUT_FILENAME",
-      "count_batch_size" = "COUNT_BATCH_SIZE"
+      "count_batch_size" = "COUNT_BATCH_SIZE",
+      "value_summary_column_batch_size" = "VALUE_SUMMARY_COLUMN_BATCH_SIZE"
     ),
     command_arguments = key_value_arguments,
     store_as_global = FALSE
@@ -55,6 +56,14 @@ parseCommandLineConfig <- function(command_arguments = NULL) {
   parsed
 }
 
+#' Validate a finite, positive integer configuration value
+validatePositiveIntegerConfig <- function(value, name) {
+  if (!is.numeric(value) || length(value) != 1L || !is.finite(value) || value < 1 || value != floor(value)) {
+    stop(name, " must be a positive integer.", call. = FALSE)
+  }
+  value
+}
+
 #' Build the database quality analysis configuration
 #'
 #' Reads command-line, global-environment and default values into one config list.
@@ -71,6 +80,13 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
     default
   }
 
+  include_code_summary <- isTRUE(as.logical(getConfigValue("INCLUDE_CODE_SUMMARY", TRUE)))
+  code_summary_file <- getConfigValue(
+    "CODE_SUMMARY_CONFIG_FILE",
+    getCodeSummaryConfigPath()
+  )
+  code_summary <- if (include_code_summary) loadCodeSummaryConfig(code_summary_file) else NULL
+
   list(
     view_prefix = getConfigValue("VIEW_PREFIX", "v_"),
     view_postfix = getConfigValue("VIEW_POSTFIX", "_last_version"),
@@ -79,7 +95,22 @@ getConfig <- function(envir = .GlobalEnv, command_arguments = NULL) {
       getConfigValue("INCLUDE_VALUE_DATETIME_COLUMNS", TRUE)
     ),
     output_filename = getConfigValue("OUTPUT_FILENAME", "Database_Quality_Analysis"),
+    include_code_summary = include_code_summary,
+    code_summary_config_file = code_summary_file,
+    code_summary_query_batching = getConfigValue("CODE_SUMMARY_QUERY_BATCHING", "resource"),
+    code_summary_sources = code_summary$sources,
+    code_summary_systems = code_summary$systems,
+    code_summary_report_types = code_summary$report_types,
+    code_summary_fields = code_summary$fields,
+    code_summary_medication_links = code_summary$medication_links,
+    code_summary_exports = code_summary$exports,
+    code_summary_processing = code_summary$processing,
+    code_summary_table_description = getConfigValue("CODE_SUMMARY_TABLE_DESCRIPTION", NA_character_),
+    progress_interval_seconds = as.numeric(getConfigValue("PROGRESS_INTERVAL_SECONDS", 60)),
     count_batch_size = as.integer(getConfigValue("COUNT_BATCH_SIZE", 100)),
+    value_summary_column_batch_size = validatePositiveIntegerConfig(
+      getConfigValue("VALUE_SUMMARY_COLUMN_BATCH_SIZE", 100L), "VALUE_SUMMARY_COLUMN_BATCH_SIZE"
+    ),
     use_database_locks = as.logical(getConfigValue("USE_DATABASE_LOCKS", FALSE)),
     boolean_group_table_families = getConfigValue("BOOLEAN_GROUP_TABLE_FAMILIES", "Frontend"),
     boolean_group_column_pattern = getConfigValue("BOOLEAN_GROUP_COLUMN_PATTERN", "___[0-9]+$"),

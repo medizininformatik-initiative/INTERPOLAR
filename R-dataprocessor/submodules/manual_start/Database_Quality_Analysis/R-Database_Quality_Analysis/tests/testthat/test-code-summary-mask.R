@@ -1,0 +1,87 @@
+test_that("global CSVs mask all small counts and suppress rare measurement statistics in every scope", {
+  count_columns <- c("count", "patient_count", "case_count", "no_case_count", "medication_count", "medication_request_count", "medication_administration_count", "medication_statement_count", "unreferenced_medication_count")
+  values <- c(0, 1, 2, 3, 4, 5, NA_real_)
+  rows <- data.table::data.table(row_type = "detail", code = paste0("000", seq_along(values)), unit = "mg/dL", low = "1", high = "10", range_type = "normal", range_type_system = "urn:type", age_low = "18", age_low_unit = "years", age_low_code = "a", age_low_system = "http://unitsofmeasure.org", age_high = NA_character_, age_high_unit = NA_character_, age_high_code = NA_character_, age_high_system = NA_character_)
+  statistic_columns <- c("median", "q1", "q3", "mean", "sd", "minimum", "maximum")
+  for (column in statistic_columns) data.table::set(rows, j = column, value = as.numeric(seq_along(values)))
+  for (column in count_columns) data.table::set(rows, j = column, value = values)
+  attr(rows, "table_family") <- "Codes"
+  original <- data.table::copy(rows)
+  reports <- list(Medication = rows)
+  attr(reports, "local_reports") <- list(Medication = rows)
+  variants <- c("all", "filtered", "all_cases", "interpolar_cases")
+  attr(reports, "export_variants") <- variants
+  scopes <- lapply(variants[-1], function(variant) {
+    scope <- list(Medication = rows)
+    attr(scope, "local_reports") <- list(Medication = rows)
+    attr(scope, "scope_label") <- toupper(variant)
+    scope
+  })
+  names(scopes) <- variants[-1]
+  attr(reports, "variant_reports") <- scopes
+  root <- tempfile("code-mask-")
+  dir.create(root)
+  on.exit(unlink(root, recursive = TRUE), add = TRUE)
+  old_dirs <- if (exists("MODULE_DIRS", inherits = TRUE)) get("MODULE_DIRS", inherits = TRUE) else NULL
+  assign("MODULE_DIRS", list(global_dir = file.path(root, "global"), local_dir = file.path(root, "local")), envir = .GlobalEnv)
+  on.exit(
+    {
+      if (is.null(old_dirs)) rm("MODULE_DIRS", envir = .GlobalEnv) else assign("MODULE_DIRS", old_dirs, envir = .GlobalEnv)
+    },
+    add = TRUE
+  )
+  for (target in c("global", "local")) {
+    archive <- writeCodeSummaryArchive(reports, "DQA", timestamp = as.POSIXct("2026-11-12", tz = "UTC"), target = target)
+    folder <- file.path(root, paste0(target, "-csv"))
+    utils::unzip(archive, exdir = folder)
+    csvs <- list.files(file.path(folder, "Codes"), full.names = TRUE)
+    expect_length(csvs, length(variants))
+    for (csv in csvs) {
+      exported <- data.table::fread(csv, colClasses = "character", na.strings = "")
+      expect_equal(exported$code, rows$code)
+      expect_equal(exported$unit, rows$unit)
+      expect_equal(exported$low, rows$low)
+      expect_equal(exported$high, rows$high)
+      for (column in grep("^range_type|^age_", names(rows), value = TRUE)) {
+        expect_equal(exported[[column]], rows[[column]])
+      }
+      for (column in statistic_columns) {
+        expected <- as.character(rows[[column]])
+        if (target == "global") expected[!is.na(values) & values < 5] <- NA_character_
+        expect_equal(exported[[column]], expected)
+      }
+      for (column in count_columns) {
+        expect_equal(exported[[column]], if (target == "global") c("0", "<5", "<5", "<5", "<5", "5", NA_character_) else as.character(values))
+      }
+    }
+  }
+  expect_equal(rows, original)
+  expect_equal(reports$Medication, original)
+  expect_equal(attr(reports, "local_reports")$Medication, original)
+})
+
+test_that("small code batches retain rare details without rare-pool SQL", {
+  fixture <- codeSummaryFixture()
+  fixture$config$code_summary_exports$variants <- "all"
+  run <- function() createCodeSummaryFixtureReports(fixture$metadata, fixture$config,
+    table_description = fixture$description,
+    query_fun = function(query, lock_id) {
+      expect_false(grepl("frequencies AS|rare_groups|other \\(count < 5\\)", query))
+      runCodeSummaryFixtureQuery(fixture, query)
+    }
+  )
+  reference <- run()
+  fixture$config$code_summary_processing <- list(enabled = TRUE, target_rows_per_chunk = 5, max_codes_per_chunk = 1L)
+  batched <- run()
+  for (resource in names(reference)) {
+    normalize <- function(rows) {
+      rows <- data.table::copy(rows)
+      data.table::setorderv(rows, intersect(c("system", "coding_path", "row_type", "code", "low", "high"), names(rows)), na.last = TRUE)
+      rows
+    }
+    expect_equal(normalize(batched[[resource]]), normalize(reference[[resource]]), tolerance = 1e-12)
+    expect_equal(batched[[resource]], attr(batched, "local_reports")[[resource]])
+  }
+  expect_equal(batched$Observation[row_type == "detail" & code == "r1", count], 1)
+  expect_equal(batched$Medication[row_type == "detail" & code == "B01", count], 1)
+})

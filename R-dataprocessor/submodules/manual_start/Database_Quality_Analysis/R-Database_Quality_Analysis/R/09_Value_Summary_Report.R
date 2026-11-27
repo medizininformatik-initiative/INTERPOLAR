@@ -241,120 +241,52 @@ buildTextValueSummaryQuery <- function(table_metadata, data_columns, resource_id
     return(NA_character_)
   }
 
-  table_alias <- "source_row"
-  value_alias <- "value_summary"
-  filled_alias <- "filled_resources"
-  resource_values_alias <- "resource_values"
   table_ref <- quoteTable(
     table_metadata$VIEW_SCHEMA[[1]],
     table_metadata$VIEW_NAME[[1]]
   )
-  resource_id_ref <- quoteQualifiedIdentifier(table_alias, resource_id_column)
-  value_rows <- vapply(data_columns, function(column_name) {
-    column_ref <- quoteQualifiedIdentifier(table_alias, column_name)
+  resource_id_ref <- quoteQualifiedIdentifier("s", resource_id_column)
+  value_aliases <- paste0("value_", seq_along(data_columns))
+  source_projections <- vapply(seq_along(data_columns), function(index) {
     paste0(
-      "(",
-      quoteSqlString(column_name),
-      ", CASE WHEN ",
-      column_ref,
-      " IS NULL OR ",
-      column_ref,
-      "::text = '' THEN NULL ELSE ",
-      column_ref,
-      "::text END)"
+      quoteQualifiedIdentifier("s", data_columns[[index]]), "::text AS ",
+      quoteIdentifier(value_aliases[[index]])
     )
   }, character(1))
+  value_rows <- vapply(seq_along(data_columns), function(index) {
+    paste0("(", index, ", NULLIF(", quoteQualifiedIdentifier("s", value_aliases[[index]]), ", ''))")
+  }, character(1))
+  column_rows <- vapply(seq_along(data_columns), function(index) {
+    paste0("(", index, ", ", quoteSqlString(data_columns[[index]]), ")")
+  }, character(1))
 
+  # Rank resource IDs once so the expanded value stream sorts compact integer
+  # keys instead of repeating long IDs and column names. NULL IDs stay uncounted;
+  # NULLS LAST makes the largest non-NULL rank equal the distinct resource count.
+  # The second grouping set counts filled resources independently of their values,
+  # preserving resources that contain both empty and filled rows for a field.
   paste0(
-    "WITH ",
-    quoteIdentifier(resource_values_alias),
-    " AS (\n  SELECT\n    ",
-    resource_id_ref,
-    " AS ",
-    quoteIdentifier("resource_id"),
-    ",\n    ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
-    " AS ",
-    quoteIdentifier("column_name"),
-    ",\n    ",
-    quoteQualifiedIdentifier(value_alias, "value"),
-    " AS ",
-    quoteIdentifier("value"),
-    "\n  FROM ",
-    table_ref,
-    " ",
-    quoteIdentifier(table_alias),
-    "\n  CROSS JOIN LATERAL (\n    VALUES\n      ",
-    paste(value_rows, collapse = ",\n      "),
-    "\n  ) AS ",
-    quoteIdentifier(value_alias),
-    "(",
-    paste(vapply(c("column_name", "value"), quoteIdentifier, character(1)), collapse = ", "),
-    ")\n  GROUP BY ",
-    resource_id_ref,
-    ", ",
-    quoteQualifiedIdentifier(value_alias, "column_name"),
-    ", ",
-    quoteQualifiedIdentifier(value_alias, "value"),
-    "\n), ",
-    quoteIdentifier(filled_alias),
-    " AS (\n  SELECT DISTINCT ",
-    quoteIdentifier("resource_id"),
-    ", ",
-    quoteIdentifier("column_name"),
-    "\n  FROM ",
-    quoteIdentifier(resource_values_alias),
-    "\n  WHERE ",
-    quoteIdentifier("value"),
-    " IS NOT NULL\n)\nSELECT\n  ",
-    quoteSqlString(table_metadata$TABLE_FAMILY[[1]]),
-    " AS ",
-    quoteIdentifier("TABLE_FAMILY"),
-    ",\n  ",
-    quoteSqlString(table_metadata$TABLE_NAME[[1]]),
-    " AS ",
-    quoteIdentifier("TABLE_NAME"),
-    ",\n  ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    " AS ",
-    quoteIdentifier("COLUMN_NAME"),
-    ",\n  ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    " AS ",
-    quoteIdentifier("VALUE"),
-    ",\n  CASE WHEN ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    " IS NULL THEN\n    COUNT(DISTINCT ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    ") FILTER (WHERE ",
-    quoteQualifiedIdentifier(filled_alias, "resource_id"),
-    " IS NULL)::integer\n  ELSE\n    COUNT(DISTINCT ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    ")::integer\n  END AS ",
-    quoteIdentifier("COUNT"),
-    "\nFROM ",
-    quoteIdentifier(resource_values_alias),
-    "\nLEFT JOIN ",
-    quoteIdentifier(filled_alias),
-    " ON ",
-    quoteQualifiedIdentifier(filled_alias, "resource_id"),
-    " = ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    " AND ",
-    quoteQualifiedIdentifier(filled_alias, "column_name"),
-    " = ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    "\nGROUP BY ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    ", ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    "\nORDER BY ",
-    quoteQualifiedIdentifier(resource_values_alias, "column_name"),
-    " ASC, COUNT(DISTINCT ",
-    quoteQualifiedIdentifier(resource_values_alias, "resource_id"),
-    ") DESC, ",
-    quoteQualifiedIdentifier(resource_values_alias, "value"),
-    " ASC"
+    "WITH source_rows AS MATERIALIZED (SELECT CASE WHEN ", resource_id_ref,
+    " IS NOT NULL THEN DENSE_RANK() OVER (ORDER BY ", resource_id_ref,
+    " NULLS LAST) END AS resource_key, ", paste(source_projections, collapse = ", "),
+    " FROM ", table_ref, " s), ",
+    "resource_total AS (SELECT COALESCE(MAX(resource_key), 0) AS total FROM source_rows), ",
+    "value_counts AS MATERIALIZED (SELECT v.column_id, v.value, ",
+    "COUNT(DISTINCT s.resource_key) AS count, GROUPING(v.value) AS is_total ",
+    "FROM source_rows s CROSS JOIN LATERAL (VALUES ", paste(value_rows, collapse = ", "),
+    ") v(column_id, value) WHERE v.value IS NOT NULL ",
+    "GROUP BY GROUPING SETS ((v.column_id, v.value), (v.column_id))), ",
+    "counts AS (SELECT column_id, value, count FROM value_counts WHERE is_total = 0 ",
+    "UNION ALL SELECT c.column_id, NULL::text, t.total - COALESCE(v.count, 0) ",
+    "FROM (VALUES ", paste(column_rows, collapse = ", "), ") c(column_id, column_name) ",
+    "CROSS JOIN resource_total t LEFT JOIN value_counts v ",
+    "ON c.column_id = v.column_id AND v.is_total = 1) SELECT ",
+    quoteSqlString(table_metadata$TABLE_FAMILY[[1]]), " AS ", quoteIdentifier("TABLE_FAMILY"), ", ",
+    quoteSqlString(table_metadata$TABLE_NAME[[1]]), " AS ", quoteIdentifier("TABLE_NAME"), ", ",
+    "c.column_name AS ", quoteIdentifier("COLUMN_NAME"), ", value AS ", quoteIdentifier("VALUE"), ", ",
+    "count::integer AS ", quoteIdentifier("COUNT"), " FROM counts JOIN (VALUES ",
+    paste(column_rows, collapse = ", "), ") c(column_id, column_name) USING (column_id) ",
+    "ORDER BY column_name, count DESC, value"
   )
 }
 
@@ -642,7 +574,9 @@ createValueSummaryReports <- function(
   value_summary_table_families <- getValueSummaryTableFamilies(config)
   metadata <- metadata[TABLE_FAMILY %in% value_summary_table_families]
   table_names <- unique(metadata$TABLE_NAME)
-  count_batch_size <- if (is.null(config$count_batch_size)) 100L else config$count_batch_size
+  count_batch_size <- config$value_summary_column_batch_size
+  if (is.null(count_batch_size)) count_batch_size <- if (is.null(config$count_batch_size)) 100L else config$count_batch_size
+  count_batch_size <- validatePositiveIntegerConfig(count_batch_size, "VALUE_SUMMARY_COLUMN_BATCH_SIZE")
   result <- list()
 
   for (table_name in table_names) {
@@ -706,8 +640,10 @@ createValueSummaryReports <- function(
             suppressed_columns,
             resource_id_column
           )
-          suppressed_result <- query_fun(
+          suppressed_result <- runLoggedQuery(
             suppressed_query$query,
+            query_fun = query_fun, config = config,
+            label = paste0("Value summary ", table_name, ": batch ", batch_index, "/", length(column_batches), "; ", "suppressed text"),
             lock_id = getDatabaseQualityAnalysisLockId(
               config,
               paste0(
@@ -734,8 +670,10 @@ createValueSummaryReports <- function(
             text_columns,
             resource_id_column
           )
-          text_counts <- query_fun(
+          text_counts <- runLoggedQuery(
             text_query,
+            query_fun = query_fun, config = config,
+            label = paste0("Value summary ", table_name, ": batch ", batch_index, "/", length(column_batches), "; ", "text"),
             lock_id = getDatabaseQualityAnalysisLockId(
               config,
               paste0(
@@ -765,8 +703,10 @@ createValueSummaryReports <- function(
             value_type,
             resource_id_column
           )
-          statistic_result <- query_fun(
+          statistic_result <- runLoggedQuery(
             statistic_query$query,
+            query_fun = query_fun, config = config,
+            label = paste0("Value summary ", table_name, ": batch ", batch_index, "/", length(column_batches), "; ", value_type),
             lock_id = getDatabaseQualityAnalysisLockId(
               config,
               paste0(
@@ -846,9 +786,13 @@ writeValueSummaryArchive <- function(
   filename_without_extension,
   timestamp = Sys.time(),
   subdir = "reports",
-  target = c("global", "local")
+  target = c("global", "local"),
+  suffix = DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_SUFFIX,
+  description = NULL
 ) {
+  write_started <- Sys.time()
   target <- match.arg(target)
+  logProgress("Preparing ", suffix, " archive for ", target, ": ", length(value_summaries), " CSV tables.")
   module_sub_dir <- file.path(
     if (identical(target, "global")) MODULE_DIRS$global_dir else MODULE_DIRS$local_dir,
     subdir
@@ -861,7 +805,7 @@ writeValueSummaryArchive <- function(
     paste0(
       filename_without_extension,
       "_",
-      DATABASE_QUALITY_ANALYSIS_VALUE_SUMMARY_SUFFIX,
+      suffix,
       "_",
       formatFilenameTimestamp(timestamp),
       ".zip"
@@ -880,6 +824,7 @@ writeValueSummaryArchive <- function(
     )
     file_name <- file.path(temp_dir, relative_file_name)
     dir.create(dirname(file_name), recursive = TRUE, showWarnings = FALSE)
+    logProgress("Writing CSV ", relative_file_name, ": ", nrow(value_summaries[[table_name]]), " summary rows.")
     data.table::fwrite(
       value_summaries[[table_name]],
       file = file_name,
@@ -890,7 +835,9 @@ writeValueSummaryArchive <- function(
     relative_file_name
   }, character(1))
 
-  if (!length(csv_files)) {
+  # A scoped archive with a README can intentionally contain no available CSVs.
+  # Keep the legacy placeholder for the value report without a description.
+  if (!length(csv_files) && is.null(description)) {
     csv_files <- file.path("FHIR", "FHIR_Value_Summary.csv")
     file_name <- file.path(temp_dir, csv_files)
     dir.create(dirname(file_name), recursive = TRUE, showWarnings = FALSE)
@@ -903,14 +850,22 @@ writeValueSummaryArchive <- function(
     )
   }
 
+  if (!is.null(description)) {
+    writeLines(description, file.path(temp_dir, "README.txt"), useBytes = TRUE)
+    csv_files <- c(csv_files, "README.txt")
+  }
+
   if (file.exists(archive_name)) {
     file.remove(archive_name)
   }
   old_wd <- getwd()
   on.exit(setwd(old_wd), add = TRUE)
   setwd(temp_dir)
-  logProgress("Writing value summary archive to ", archive_name, ".")
-  utils::zip(archive_name, files = csv_files, flags = "-q")
-  logProgress("Value summary archive written to ", archive_name, ".")
+  logProgress("Writing ", suffix, " archive to ", archive_name, ".")
+  zip_status <- utils::zip(archive_name, files = csv_files, flags = "-q")
+  if (!identical(as.integer(zip_status), 0L) || !file.exists(archive_name)) {
+    stop("Could not write ", suffix, " archive: ", archive_name, call. = FALSE)
+  }
+  logProgress(suffix, " archive written to ", archive_name, " in ", formatDuration(write_started), ".")
   invisible(archive_name)
 }
