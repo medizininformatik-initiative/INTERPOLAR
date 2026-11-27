@@ -56,6 +56,16 @@ test_that("every expanded result cell is mapped and all populations are exported
   workbook <- xml2::read_xml(file.path(output, "xl/workbook.xml"))
   expect_length(xml2::xml_find_all(workbook, "//*[local-name()='sheet']"), 1L)
   expect_false(any(xml2::xml_text(nodes) %in% c(fixture$cases$patient_id, fixture$cases$case_id)))
+  cell_text <- function(address) {
+    xml2::xml_text(xml2::xml_find_first(document, paste0("//*[local-name()='c'][@r='", address, "']")))
+  }
+  expect_equal(cell_text("B9"), "0")
+  expect_equal(cell_text("C6"), "<5")
+  expect_equal(cell_text("D6"), "<5")
+  published <- data.table::fread(file.path(directory, "cohort_manifest.csv"))
+  expect_equal(published[phase == "BS"]$cases, c(rep("<5", 4L), rep("0", 3L)))
+  expect_equal(published[phase == "BS"]$patients, published[phase == "BS"]$cases)
+  expect_equal(maskCohortCounts(c(0:6, NA_integer_)), c("0", rep("<5", 4L), "5", "6", NA_character_))
   date_cell <- xml2::xml_find_first(document, "//*[local-name()='c'][@r='H9']")
   expect_equal(xml2::xml_text(date_cell), "2025-01-01 00:00:00")
 })

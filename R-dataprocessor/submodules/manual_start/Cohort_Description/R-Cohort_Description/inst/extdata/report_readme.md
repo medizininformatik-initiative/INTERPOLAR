@@ -3,7 +3,8 @@
 `regular/` contains BS, CRS A and CRS B results. `broad_consent/` contains TRS
 and RES results. Each source directory contains the CSV files below, the Excel
 workbooks listed in its manifest, and `open_questions.md` with calculation notes.
-The CSV headers are on the first line.
+The CSV headers are on the first line. Counts from 1 to 4 appear as `<5` in
+the workbooks and aggregate CSV files. Zero counts appear as `0`.
 
 ## cohort_manifest.csv
 

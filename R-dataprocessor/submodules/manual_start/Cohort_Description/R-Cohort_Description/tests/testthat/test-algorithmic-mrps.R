@@ -86,7 +86,7 @@ test_that("BC export includes all seven FAS for both studies, including empty su
   summary <- data.table::fread(file.path(directory, "algorithmic_mrps_by_first_meda_timing.csv"))
   expect_equal(nrow(summary), 8L)
   expect_setequal(summary$phase, c("TRS", "RES"))
-  expect_equal(sum(summary$cases_with_first_completed_meda), 1L)
+  expect_equal(sort(summary$cases_with_first_completed_meda), sort(c("<5", rep("0", 7L))))
   expect_true(all(summary$algorithmic_mrps == 0L))
   expect_equal(nrow(manifest), 14L)
   expect_setequal(manifest$phase, c("TRS", "RES"))

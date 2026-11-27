@@ -302,7 +302,11 @@ getResourcesFromDB <- function(
 ) {
   patient_ref_column_name <- etlutils::fhirdbGetPIDColumn(resource_name)
   patient_references <- etlutils::fhirdataGetPatientReference(patient_references)
-  patient_references <- etlutils::fhirdbGetQueryList(patient_references)
+  # Patient resources are keyed by bare ID. Other resources store a reference.
+  patient_references <- etlutils::fhirdbGetQueryList(
+    patient_references,
+    remove_ref_type = tolower(resource_name) == "patient"
+  )
   status_exclusion <- etlutils::fhirdbGetQueryList(status_exclusion, return_NA_if_empty = TRUE)
 
   where_clause <- paste0("WHERE ", patient_ref_column_name, " IN ", patient_references, "\n")

@@ -84,7 +84,10 @@ createCohortDescription <- function(source = "regular") {
     etlutils::getVarByNameOrDefaultIfMissing("SITE_CODE"), directory,
     source = source
   ))
-  data.table::fwrite(data$quality, file.path(directory, "cohort_quality.csv"))
+  data.table::fwrite(
+    data$quality[, .(check, count = maskCohortCounts(count))],
+    file.path(directory, "cohort_quality.csv")
+  )
   if (!file.copy(cohortAssetPath("report_readme.md"), file.path(dirname(directory), "README.md"), overwrite = TRUE)) {
     stop("Could not write the cohort report README.")
   }

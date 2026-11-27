@@ -63,6 +63,13 @@ calculateCohortCells <- function(cases, specification) {
   data.table::rbindlist(results)
 }
 
+# Apply only to published counts. Keep the underlying analysis values numeric.
+maskCohortCounts <- function(counts) {
+  result <- as.character(counts)
+  result[which(counts >= 1 & counts < 5)] <- "<5"
+  result
+}
+
 #' Fill existing template cells without changing formatting or worksheet structure
 #' @param template Single-sheet expanded workbook.
 #' @param cells Aggregate cell addresses and numeric values.
@@ -87,6 +94,12 @@ writeCohortWorkbook <- function(template, cells, headers, destination, timezone)
     node <- nodes[[positions[i]]]
     xml2::xml_remove(xml2::xml_children(node))
     value <- updates[[i]]
+    if (
+      grepl("^[BCD][0-9]+$", names(updates)[i]) &&
+      is.numeric(value) && is.finite(value) && value >= 1 && value < 5
+    ) {
+      value <- maskCohortCounts(value)
+    }
     # Template date cells have General format. ISO text preserves full timestamps
     # without changing the maintained cell formats; SD remains a number of days.
     if (grepl("^[HIJKMN](9|10|12|13)$", names(updates)[i]) && is.finite(value)) {
@@ -179,7 +192,9 @@ exportCohortDescription <- function(cases, wards, timezone, site, directory, sou
     }
   }
   result <- data.table::rbindlist(manifest)
-  data.table::fwrite(result, file.path(directory, "cohort_manifest.csv"))
+  published <- data.table::copy(result)
+  published[, `:=`(cases = maskCohortCounts(cases), patients = maskCohortCounts(patients))]
+  data.table::fwrite(published, file.path(directory, "cohort_manifest.csv"))
   writeCohortMRPByMedALocation(populations, periods, directory)
   if (!file.copy(cohortAssetPath("open_questions.md"), file.path(directory, "open_questions.md"), overwrite = TRUE))
     stop("Could not write the cohort clarification notes.")

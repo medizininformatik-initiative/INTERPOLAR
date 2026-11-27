@@ -87,6 +87,8 @@ writeCohortMRPByMedALocation <- function(populations, periods, directory) {
   ), by = .(ward_name, phase, first_meda_location)]
   keys <- c("ward_name", "phase", "first_meda_location")
   result <- counts[grid, on = keys]
-  for (column in setdiff(names(result), keys)) data.table::setnafill(result, fill = 0L, cols = column)
+  count_columns <- setdiff(names(result), keys)
+  data.table::setnafill(result, fill = 0L, cols = count_columns)
+  result[, (count_columns) := lapply(.SD, maskCohortCounts), .SDcols = count_columns]
   data.table::fwrite(result, file.path(directory, "algorithmic_mrps_by_first_meda_timing.csv"))
 }
