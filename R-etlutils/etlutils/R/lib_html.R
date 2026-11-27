@@ -12,7 +12,6 @@ saveHtmlWidgetPage <- function(widget, output_file, title) {
   })
   header_file <- file.path(work_dir, "header.html")
   writeLines(c(
-    as.character(htmltools::tags$title(title)),
     as.character(htmltools::renderDependencies(dependencies, srcType = c("href", "file"))),
     rendered$head
   ), header_file, useBytes = TRUE)
@@ -24,6 +23,7 @@ saveHtmlWidgetPage <- function(widget, output_file, title) {
   template_file <- file.path(work_dir, "template.html")
   writeLines(c(
     "<!DOCTYPE html>", "<html>", "<head>", '<meta charset="utf-8"/>',
+    "<title>$pagetitle$</title>",
     "$for(header-includes)$", "$header-includes$", "$endfor$", "</head>",
     '<body style="background-color: white;">', "$body$", "</body>", "</html>"
   ), template_file)
@@ -33,6 +33,7 @@ saveHtmlWidgetPage <- function(widget, output_file, title) {
     from = "markdown", to = "html", output = embedded_file,
     options = c(
       "--self-contained", "--template", template_file,
+      "--metadata", paste0("pagetitle=", title),
       "--include-in-header", header_file
     )
   )
