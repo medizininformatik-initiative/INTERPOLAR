@@ -33,6 +33,44 @@ matchCohortEvents <- function(cases, events, end_column) {
 #' @param procedures Prepared OPS events with proc_code_code and ops_terminal.
 #' @return Case rows with metric columns named for the internal local specification row.
 calculateCohortCodeFeatures <- function(cases, diagnoses, medications, observations, procedures) {
+  if (!data.table::is.data.table(cases)) cases <- data.table::as.data.table(cases)
+  patients <- unique(cases$patient_id)
+  batch_size <- 256L
+  if (length(patients) <= batch_size) {
+    return(calculateCohortCodeFeatureBatch(cases, diagnoses, medications, observations, procedures))
+  }
+
+  # Keep all cases of a patient together so overlapping cases share the same
+  # event input. Index each source once and materialize only the needed columns.
+  case_batches <- split(seq_len(nrow(cases)), (match(cases$patient_id, patients) - 1L) %/% batch_size)
+  event_columns <- list(
+    diagnoses = c("code", "icd_terminal"),
+    medications = "code",
+    observations = c(
+      "code", "relevant", "unit_ok", "numeric_ok", "abnormal", "normal", "egfr",
+      "value_reference", "compatible_unit"
+    ),
+    procedures = c("proc_code_code", "ops_terminal")
+  )
+  sources <- list(diagnoses, medications, observations, procedures)
+  sources <- lapply(sources, function(events) {
+    if (!data.table::is.data.table(events)) events <- data.table::as.data.table(events)
+    data.table::setindexv(events, "patient_id")
+    events
+  })
+  results <- lapply(case_batches, function(rows) {
+    batch <- cases[rows]
+    ids <- unique(batch$patient_id)
+    events <- Map(function(event_table, columns) {
+      keep <- intersect(c("patient_id", "start_datetime", columns), names(event_table))
+      event_table[.(ids), on = "patient_id", nomatch = NULL, ..keep]
+    }, sources, event_columns)
+    calculateCohortCodeFeatureBatch(batch, events[[1]], events[[2]], events[[3]], events[[4]])
+  })
+  data.table::rbindlist(results)[order(unlist(case_batches, use.names = FALSE))]
+}
+
+calculateCohortCodeFeatureBatch <- function(cases, diagnoses, medications, observations, procedures) {
   cases <- data.table::copy(data.table::as.data.table(cases))
   # Aggregation depends on the availability of interpretable source data, not on
   # a positive finding. Missing source data must never silently become zero.

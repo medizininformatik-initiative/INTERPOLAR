@@ -123,3 +123,24 @@ test_that("workbooks can be written to relative output paths and overwritten", {
     unlink(dirname(dirname(dirname(xml))), recursive = TRUE)
   }
 })
+
+test_that("bounded feature batches preserve metric values and case order", {
+  time <- as.POSIXct("2025-01-01", tz = "UTC")
+  patients <- paste0("p", seq_len(260L))
+  cases <- data.table::data.table(
+    patient_id = c(patients, patients[1]), age = 60,
+    hospital_start = time, hospital_end = time + 86400, code_cutoff = time + 3600
+  )
+  events <- data.table::data.table(patient_id = patients[seq(1L, 260L, 2L)], start_datetime = time)
+  diagnoses <- data.table::copy(events)[, `:=`(code = "E11.90", icd_terminal = TRUE)]
+  medications <- data.table::copy(events)[, code := "A10BA02"]
+  observations <- data.table::copy(events)[, `:=`(
+    code = "62238-1", relevant = TRUE, unit_ok = TRUE, numeric_ok = TRUE,
+    abnormal = TRUE, normal = FALSE, egfr = TRUE, value_reference = 80, compatible_unit = TRUE
+  )]
+  procedures <- data.table::copy(events)[, `:=`(proc_code_code = "8-853", ops_terminal = TRUE)]
+  expect_equal(
+    calculateCohortCodeFeatures(cases, diagnoses, medications, observations, procedures),
+    calculateCohortCodeFeatureBatch(cases, diagnoses, medications, observations, procedures)
+  )
+})

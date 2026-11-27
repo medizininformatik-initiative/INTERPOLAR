@@ -54,7 +54,8 @@ provide the normal WP7 input repository. Run from the repository root:
 docker compose run --build --rm --no-deps r-env Rscript R-dataprocessor/StartDataProcessor.R cohort-description
 ```
 
-The full run requires both databases and checks their connections before analysis.
+The full run checks both database connections before analysis. It then runs each
+source in its own R process and releases its memory before starting the next source.
 For an explicit partial run, append `database-source=regular` or
 `database-source=broad_consent`. Only the selected database is required.
 

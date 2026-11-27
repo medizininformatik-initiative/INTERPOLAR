@@ -14,7 +14,11 @@ rm(list = ls())
 library(etlutils)
 library(dataprocessor)
 
-status <- dataprocessor::processData()
+status <- if (interactive()) {
+  dataprocessor::processData()
+} else {
+  dataprocessor:::processDataCommandLine("R-dataprocessor/StartDataProcessor.R")
+}
 if (!interactive()) {
   quit(status = status, save = "no")
 }
