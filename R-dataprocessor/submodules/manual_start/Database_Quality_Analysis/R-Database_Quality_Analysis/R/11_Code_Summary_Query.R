@@ -478,8 +478,7 @@ buildCodeSummaryQuery <- function(sources, links, systems, report_types,
     "(", scoped_events, ")"
   ))
   if (include_no_version) {
-    has_observations <- any(vapply(sources, function(source) source$resource == "Observation", logical(1)))
-    return(buildCodeSummaryNoVersionQuery(ctes, query_mode, any(measurement_sources), has_observations))
+    return(buildCodeSummaryNoVersionQuery(ctes, query_mode, any(measurement_sources)))
   }
   if (query_mode == "details_statistics") {
     return(buildCodeSummaryDetailQuery(ctes, collect_statistics = any(measurement_sources)))

@@ -49,7 +49,9 @@ test_that("CSV variants are selected before aggregation and written to the exist
   fixture$config$code_summary_exports$variants <- NULL
   fixture$extra_sql <- c(
     fixture$extra_sql,
-    "INSERT INTO observation (obs_id,obs_encounter_calculated_ref,obs_code_system,obs_code_version,obs_code_code,obs_unit,obs_unit_system,obs_low) VALUES ('rollup1','Encounter/e2','http://loinc.org','v1','rollup','mg/dL','http://unitsofmeasure.org','1'),('rollup1','Encounter/e2','http://loinc.org','v2','rollup','mg/dL','http://unitsofmeasure.org','2'),('rollup2','Encounter/e2','http://loinc.org','v2','rollup','mg/dL','http://unitsofmeasure.org','2'),('rollup1','Encounter/e2','http://loinc.org','v1','rollup',NULL,NULL,NULL),('rollup1','Encounter/e2','http://loinc.org','v1','rollup','mg/dL','urn:other-unit',NULL);",
+    "INSERT INTO observation (obs_id,obs_encounter_calculated_ref,obs_code_system,obs_code_version,obs_code_code,obs_unit,obs_unit_system,obs_low,obs_value) VALUES ('rollup1','Encounter/e2','http://loinc.org','v1','rollup','mg/dL','http://unitsofmeasure.org','1',10),('rollup1','Encounter/e2','http://loinc.org','v2','rollup','mg/dL','http://unitsofmeasure.org','2',10),('rollup2','Encounter/e2','http://loinc.org','v2','rollup','mg/dL','http://unitsofmeasure.org','2',30),('rollup1','Encounter/e2','http://loinc.org','v1','rollup',NULL,NULL,NULL,10),('rollup1','Encounter/e2','http://loinc.org','v1','rollup','mg/dL','urn:other-unit',NULL,10);",
+    "INSERT INTO observation (obs_id,obs_encounter_calculated_ref,obs_code_system,obs_code_version,obs_code_code,obs_unit,obs_unit_system,obs_low,obs_value) VALUES ('rollup1','Encounter/e2','http://snomed.info/sct','v1','rollup','mg/dL','http://unitsofmeasure.org','1',10),('rollup1','Encounter/e2','http://snomed.info/sct','v2','rollup','mg/dL','http://unitsofmeasure.org','2',10);",
+    "UPDATE observation SET obs_patient_ref='Patient/p1' WHERE obs_code_code='rollup';",
     "INSERT INTO condition (con_id,con_encounter_calculated_ref,con_code_system,con_code_version,con_code_code) VALUES ('dx1','Encounter/e2','http://fhir.de/CodeSystem/bfarm/icd-10-gm','v1','I10'),('dx1','Encounter/e2','http://fhir.de/CodeSystem/bfarm/icd-10-gm','v2','I10'),('dx2','Encounter/e2','http://fhir.de/CodeSystem/bfarm/icd-10-gm','v2','I10');",
     "INSERT INTO medication (med_id,med_code_system,med_code_version,med_code_code) VALUES ('rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v1','rollup-atc'),('rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v2','rollup-atc');",
     "INSERT INTO medicationrequest (medreq_id,medreq_encounter_calculated_ref,medreq_medicationreference_ref,medreq_direct_system,medreq_direct_version,medreq_direct_code) VALUES ('rollup-request','Encounter/e2','Medication/rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v1','rollup-atc'),('rollup-request','Encounter/e2','Medication/rollup-med','http://fhir.de/CodeSystem/bfarm/atc','v3','rollup-atc');"
@@ -76,7 +78,7 @@ test_that("CSV variants are selected before aggregation and written to the exist
       paste0("Codes/", names(reports), "_", scope, ".csv")
     }))
     expected_no_version <- unlist(lapply(c("all", "interpolar"), function(scope) {
-      paste0("Codes_no_version/", c(names(reports), "LOINC"), "_", scope, "_no_version.csv")
+      paste0("Codes_no_version/", names(reports), "_", scope, "_no_version.csv")
     }))
     expect_setequal(members[endsWith(members, ".csv")], c(expected, expected_no_version))
     output <- file.path(root, target, "unpacked")
@@ -85,13 +87,27 @@ test_that("CSV variants are selected before aggregation and written to the exist
       readCompact <- function(resource) {
         data.table::fread(file.path(output, "Codes_no_version", paste0(resource, "_", scope, "_no_version.csv")))
       }
-      loinc <- readCompact("LOINC")
-      expect_named(loinc, c("code", "unit", "unit_system", "count"))
-      expect_equal(
-        loinc[code == "rollup" & unit_system == "http://unitsofmeasure.org", count],
-        if (target == "global") "<5" else 2L
-      )
-      expect_equal(nrow(loinc[code == "rollup"]), 3L)
+      observation <- readCompact("Observation")
+      expect_named(observation, setdiff(names(reports$Observation), c("version", codeSummaryReferenceRangeColumns())))
+      same_unit <- observation[code == "rollup" & unit_system == "http://unitsofmeasure.org"]
+      expect_setequal(same_unit$system, c("http://loinc.org", "http://snomed.info/sct"))
+      expect_equal(same_unit[system == "http://snomed.info/sct", count], if (target == "global") "<5" else 1L)
+      rollup <- same_unit[system == "http://loinc.org"]
+      expect_equal(rollup$count, if (target == "global") "<5" else 2L)
+      expect_equal(rollup$patient_count, if (target == "global") "<5" else 1L)
+      expect_equal(rollup$case_count, if (target == "global") "<5" else 1L)
+      expect_equal(nrow(observation[code == "rollup" & system == "http://loinc.org"]), 3L)
+      if (target == "global") {
+        expect_true(all(is.na(rollup[, .(median, q1, q3, mean, sd, minimum, maximum)])))
+      } else {
+        expect_equal(rollup$median, 20)
+        expect_equal(rollup$q1, 15)
+        expect_equal(rollup$q3, 25)
+        expect_equal(rollup$mean, 20)
+        expect_equal(rollup$sd, sqrt(200), tolerance = 1e-12)
+        expect_equal(rollup$minimum, 10)
+        expect_equal(rollup$maximum, 30)
+      }
       condition <- readCompact("Condition")
       expect_false("version" %in% names(condition))
       expect_equal(

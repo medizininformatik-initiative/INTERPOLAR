@@ -137,8 +137,7 @@ buildCodeSummaryStageCatalog <- function() {
   paste(
     "SELECT c.*,r.relname AS source_partition FROM (",
     "SELECT tableoid,system,code,SUM(cardinality(report_scopes))::double precision AS source_rows,",
-    "MAX(CASE WHEN value IS NOT NULL THEN 1 ELSE 0 END) AS measurement,",
-    "BOOL_OR((report='Observation' AND system='http://loinc.org') IS NOT TRUE) AS has_non_loinc",
+    "MAX(CASE WHEN value IS NOT NULL THEN 1 ELSE 0 END) AS measurement",
     "FROM pg_temp.dqa_code_events WHERE NOT unresolved GROUP BY tableoid,system,code",
     ") c JOIN pg_catalog.pg_class r ON r.oid=c.tableoid"
   )
@@ -177,15 +176,11 @@ runStagedCodeSummary <- function(connection, sources, links, config, report_type
   catalog <- runPass(buildCodeSummaryStageCatalog(), "code frequencies")
   chunks <- planCodeSummaryChunks(catalog, processing)
   logProgress(label, ": ", nrow(catalog), " system/code groups in ", length(chunks), " serial chunks.")
-  has_observations <- any(vapply(sources, function(source) source$resource == "Observation", logical(1)))
   clinical_cases_only <- isClinicalCodeSummary(sources, links) && !"all" %in% export_variants
   # Cross-code totals still need complete resource identities. They cannot
   # be recovered by summing the per-code patient, case or resource counts.
   rows <- list(runPass(
-    buildStagedCodeSummaryPass(
-      "totals", has_observations, clinical_cases_only,
-      has_non_loinc = !clinical_cases_only || any(catalog$has_non_loinc)
-    ),
+    buildStagedCodeSummaryPass("totals", clinical_cases_only),
     "exact cross-code totals and diagnostics"
   ))
   for (index in seq_along(chunks)) {
@@ -196,7 +191,7 @@ runStagedCodeSummary <- function(connection, sources, links, config, report_type
     for (scope in scopes) {
       rows[[length(rows) + 1L]] <- runPass(
         buildStagedCodeSummaryPass(
-          "details_statistics", has_observations, clinical_cases_only,
+          "details_statistics", clinical_cases_only,
           keys, any(keys$measurement == 1L), scope
         ),
         paste0(
@@ -209,9 +204,8 @@ runStagedCodeSummary <- function(connection, sources, links, config, report_type
   data.table::rbindlist(rows, use.names = TRUE, fill = TRUE)
 }
 
-buildStagedCodeSummaryPass <- function(mode, has_observations, clinical_cases_only,
-                                       keys = NULL, measurements = FALSE, scope = NA_character_,
-                                       has_non_loinc = is.null(keys$has_non_loinc) || any(keys$has_non_loinc)) {
+buildStagedCodeSummaryPass <- function(mode, clinical_cases_only,
+                                       keys = NULL, measurements = FALSE, scope = NA_character_) {
   partitions <- unique(keys$source_partition)
   from <- "pg_temp.dqa_code_events e"
   if (length(partitions)) {
@@ -241,5 +235,5 @@ buildStagedCodeSummaryPass <- function(mode, has_observations, clinical_cases_on
     "scoped_events AS ", if (materialized) "MATERIALIZED" else "NOT MATERIALIZED",
     " (SELECT ", scope_column, ",e.* FROM ", from, " ", where, ")"
   )
-  buildCodeSummaryNoVersionQuery(ctes, mode, measurements, has_observations, clinical_cases_only, has_non_loinc)
+  buildCodeSummaryNoVersionQuery(ctes, mode, measurements, clinical_cases_only)
 }

@@ -167,14 +167,11 @@ test_that("staged chunks recover detailed and version-independent reports from t
     expected <- runCodeSummaryFixtureQuery(fixture, makeQuery("combined"))
     setup_sql <- paste0(buildCodeSummaryStageCommands(makeQuery("stage")), ";")
     catalog <- runCodeSummaryFixtureQuery(fixture, buildCodeSummaryStageCatalog(), setup_sql)
-    catalog[, has_non_loinc := has_non_loinc %in% c("t", "TRUE")]
     expect_false(anyDuplicated(catalog[, .(system, code)]) > 0L)
-    totals_query <- buildStagedCodeSummaryPass("totals", clinical, clinical,
-      has_non_loinc = !clinical || any(catalog$has_non_loinc)
-    )
+    totals_query <- buildStagedCodeSummaryPass("totals", clinical)
     totals <- runCodeSummaryFixtureQuery(fixture, totals_query, setup_sql)
     details <- lapply(if (clinical) variants else NA_character_, function(scope) {
-      query <- buildStagedCodeSummaryPass("details_statistics", clinical, clinical,
+      query <- buildStagedCodeSummaryPass("details_statistics", clinical,
         catalog,
         measurements = clinical, scope = scope
       )

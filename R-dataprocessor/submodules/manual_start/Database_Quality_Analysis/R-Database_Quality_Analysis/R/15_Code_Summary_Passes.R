@@ -193,32 +193,33 @@ buildCodeSummarySharedQuery <- function(ctes, collect_statistics = FALSE) {
 }
 
 
-# Reaggregate the same resolved events, with a version-independent Medication key.
-buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, has_observations,
-                                           clinical_cases_only = FALSE, has_non_loinc = TRUE) {
-  loinc <- "report='Observation' AND system='http://loinc.org'"
-  if (has_non_loinc) {
-    ctes <- c(ctes, paste0(
-      "no_version_events AS (SELECT report_scope,report || '_no_version' AS report,system,coding_path,",
-      "NULL::text AS version,code,unit,unit_system,low,high,range_type,range_type_system,",
-      "age_low,age_low_unit,age_low_code,age_low_system,age_high,age_high_unit,age_high_code,age_high_system,",
-      "no_version_key AS count_key,event_key,kind,pid,case_id,unreferenced_medication,unresolved,value ",
-      "FROM scoped_events", if (has_observations) paste0(" WHERE (", loinc, ") IS NOT TRUE"), ")"
-    ))
-  }
+codeSummaryReferenceRangeColumns <- function() {
+  c(
+    "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code",
+    "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system"
+  )
+}
+
+# Remove grouping dimensions before deduplicating resource IDs and measurements.
+buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, clinical_cases_only = FALSE) {
+  ranges <- codeSummaryReferenceRangeColumns()
+  range_projection <- paste0("CASE WHEN report <> 'Observation' THEN ", ranges, " END AS ", ranges, collapse = ",")
+  ctes <- c(ctes, paste0(
+    "no_version_events AS (SELECT report_scope,report || '_no_version' AS report,system,coding_path,",
+    "NULL::text AS version,code,unit,unit_system,", range_projection, ",",
+    "no_version_key AS count_key,event_key,kind,pid,case_id,unreferenced_medication,unresolved,value ",
+    "FROM scoped_events)"
+  ))
   detail <- function(events) {
     buildCodeSummaryDetailQuery(character(), measurements && mode %in% c("combined", "details_statistics"), events, clinical_cases_only)
   }
   totals <- function(events) buildCodeSummaryCompactQuery(character(), "totals", events = events, clinical_cases_only = clinical_cases_only)
   queries <- character()
   if (mode != "totals") {
-    queries <- detail("scoped_events")
-    if (has_non_loinc) queries <- c(queries, detail("no_version_events"))
-    if (has_observations) queries <- c(queries, buildCodeSummaryLoincCountsQuery(loinc))
+    queries <- c(detail("scoped_events"), detail("no_version_events"))
   }
   if (mode %in% c("combined", "totals")) {
-    queries <- c(queries, totals("scoped_events"))
-    if (has_non_loinc) queries <- c(queries, totals("no_version_events"))
+    queries <- c(queries, totals("scoped_events"), totals("no_version_events"))
   }
   paste0(
     "/* INTERPOLAR DQA shared summary with version-independent counts */\nWITH ",
@@ -228,28 +229,4 @@ buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, has_observa
     "c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,",
     "c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
   )
-}
-
-
-# LOINC only needs one distinct count, so keep this aggregation narrow.
-buildCodeSummaryLoincCountsQuery <- function(loinc) {
-  absent_dimensions <- c(
-    "coding_path", "version", "low", "high", "range_type", "range_type_system",
-    "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit",
-    "age_high_code", "age_high_system"
-  )
-  absent_counts <- c(
-    "patient_count", "case_count", "no_case_count", "medication_count",
-    "medication_request_count", "medication_administration_count", "medication_statement_count",
-    "unreferenced_medication_count"
-  )
-  counts <- paste0(
-    "counts AS (SELECT NULL::text[] AS summary_id,report_scope,'both'::text AS export_target,",
-    "'LOINC_no_version'::text AS report,'http://loinc.org'::text AS system,'detail'::text AS row_type,",
-    "code,unit,unit_system,", paste0("NULL::text AS ", absent_dimensions, collapse = ","), ",",
-    "COUNT(DISTINCT count_key) AS count,", paste0("NULL::bigint AS ", absent_counts, collapse = ","),
-    " FROM scoped_events WHERE NOT unresolved AND ", loinc,
-    " GROUP BY report_scope,code,unit,unit_system)"
-  )
-  buildCodeSummaryResultQuery(counts)
 }

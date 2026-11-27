@@ -154,7 +154,6 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
   }
   buildReports <- function(output_target, output_scope = "all", no_version = FALSE) {
     names_to_build <- report_names
-    if (no_version && any(source_resources == "Observation")) names_to_build <- c(names_to_build, "LOINC")
     result <- lapply(names_to_build, function(report_name) {
       resource_sources <- Filter(function(source) source$resource == report_name, sources)
       output_columns <- c(
@@ -166,7 +165,7 @@ buildCodeSummaryReports <- function(metadata, config, query_fun, table_descripti
       if (no_version) {
         query_report <- paste0(report_name, "_no_version")
         output_columns <- setdiff(output_columns, "version")
-        if (report_name == "LOINC") output_columns <- c("code", "unit", "unit_system", "count")
+        if (report_name == "Observation") output_columns <- setdiff(output_columns, codeSummaryReferenceRangeColumns())
       }
       if (nrow(rows)) {
         report <- rows[report_scope == output_scope & export_target == output_target & report == query_report, ..output_columns]
@@ -354,7 +353,7 @@ writeCodeSummaryArchive <- function(code_summaries, filename_without_extension,
       description, "",
       "Codes_no_version: counts are deduplicated from the original resolved events without code version.",
       "Direct medication codes match referenced Medication by system and code, regardless of version.",
-      "LOINC is reported separately by code, unit and unit system, with resource counts only."
+      "Observation counts and statistics combine reference ranges while retaining unit and unit system."
     )
   }
   if (target == "global") {
