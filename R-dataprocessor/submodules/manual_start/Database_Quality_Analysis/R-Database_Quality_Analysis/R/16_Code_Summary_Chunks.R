@@ -180,7 +180,9 @@ runStagedCodeSummary <- function(connection, sources, links, config, report_type
   # Cross-code totals still need complete resource identities. They cannot
   # be recovered by summing the per-code patient, case or resource counts.
   rows <- list(runPass(
-    buildStagedCodeSummaryPass("totals", clinical_cases_only),
+    buildStagedCodeSummaryPass("totals", clinical_cases_only,
+      observation_only = all(vapply(sources, function(source) source$resource == "Observation", logical(1)))
+    ),
     "exact cross-code totals and diagnostics"
   ))
   for (index in seq_along(chunks)) {
@@ -205,7 +207,7 @@ runStagedCodeSummary <- function(connection, sources, links, config, report_type
 }
 
 buildStagedCodeSummaryPass <- function(mode, clinical_cases_only,
-                                       keys = NULL, measurements = FALSE, scope = NA_character_) {
+                                       keys = NULL, measurements = FALSE, scope = NA_character_, observation_only = FALSE) {
   partitions <- unique(keys$source_partition)
   from <- "pg_temp.dqa_code_events e"
   if (length(partitions)) {
@@ -235,5 +237,5 @@ buildStagedCodeSummaryPass <- function(mode, clinical_cases_only,
     "scoped_events AS ", if (materialized) "MATERIALIZED" else "NOT MATERIALIZED",
     " (SELECT ", scope_column, ",e.* FROM ", from, " ", where, ")"
   )
-  buildCodeSummaryNoVersionQuery(ctes, mode, measurements, clinical_cases_only)
+  buildCodeSummaryNoVersionQuery(ctes, mode, measurements, clinical_cases_only, observation_only)
 }

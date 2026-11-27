@@ -168,7 +168,7 @@ test_that("staged chunks recover detailed and version-independent reports from t
     setup_sql <- paste0(buildCodeSummaryStageCommands(makeQuery("stage")), ";")
     catalog <- runCodeSummaryFixtureQuery(fixture, buildCodeSummaryStageCatalog(), setup_sql)
     expect_false(anyDuplicated(catalog[, .(system, code)]) > 0L)
-    totals_query <- buildStagedCodeSummaryPass("totals", clinical)
+    totals_query <- buildStagedCodeSummaryPass("totals", clinical, observation_only = clinical)
     totals <- runCodeSummaryFixtureQuery(fixture, totals_query, setup_sql)
     details <- lapply(if (clinical) variants else NA_character_, function(scope) {
       query <- buildStagedCodeSummaryPass("details_statistics", clinical,

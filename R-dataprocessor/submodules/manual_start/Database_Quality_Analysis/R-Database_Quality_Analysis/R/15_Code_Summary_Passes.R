@@ -29,11 +29,22 @@ buildCodeSummaryCountsCte <- function(clinical_cases_only = FALSE) {
 }
 
 #' Reuse count output expansion and the existing null-safe statistics merge
-buildCodeSummaryResultQuery <- function(ctes, collect_statistics = FALSE) {
+buildCodeSummaryResultQuery <- function(ctes, collect_statistics = FALSE, share_observation_totals = FALSE) {
+  report_join <- if (share_observation_totals) {
+    paste0(
+      " CROSS JOIN LATERAL (SELECT c.report AS output_report UNION ALL ",
+      "SELECT 'Observation_no_version' WHERE c.report='Observation') r"
+    )
+  } else ""
+  report_select <- if (share_observation_totals) "c.output_report AS report" else "c.report"
+  summary_id <- if (share_observation_totals) {
+    "c.summary_id[1:2] || ARRAY[c.output_report] || c.summary_id[4:cardinality(c.summary_id)] AS summary_id"
+  } else "c.summary_id"
   export_targets <- "(VALUES ('global'), ('local')) AS t(export_target)"
   ctes <- c(ctes, paste0(
-    "counts_outputs AS (SELECT c.*,t.export_target AS output_target FROM counts c CROSS JOIN ",
-    export_targets, " WHERE c.export_target IN ('both',t.export_target))"
+    "counts_outputs AS (SELECT c.*,t.export_target AS output_target",
+    if (share_observation_totals) ",r.output_report", " FROM counts c CROSS JOIN ",
+    export_targets, report_join, " WHERE c.export_target IN ('both',t.export_target))"
   ))
   # Statistics contain a subset of the count groups, keyed identically. FULL
   # therefore has the same rows as LEFT here, while requiring a hash/merge join
@@ -49,11 +60,11 @@ buildCodeSummaryResultQuery <- function(ctes, collect_statistics = FALSE) {
   statistics_join <- if (collect_statistics) " FULL JOIN statistics s USING (summary_id) " else " "
   paste0(
     "/* INTERPOLAR DQA code summary */\nWITH ", paste(ctes, collapse = ",\n"),
-    "\nSELECT c.summary_id,c.report_scope,c.output_target AS export_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,",
+    "\nSELECT ", summary_id, ",c.report_scope,c.output_target AS export_target,", report_select, ",c.system,c.coding_path,c.row_type,c.version,c.code,",
     "c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system,c.count,c.patient_count,c.case_count,c.no_case_count,c.medication_count,",
     "c.medication_request_count,c.medication_administration_count,c.medication_statement_count,c.unreferenced_medication_count,",
     statistics_select, " FROM counts_outputs c", statistics_join,
-    "ORDER BY c.report_scope,c.output_target,c.report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
+    "ORDER BY c.report_scope,c.output_target,report,c.system,c.coding_path,c.row_type,c.version,c.code,c.unit,c.unit_system,c.low,c.high,c.range_type,c.range_type_system,c.age_low,c.age_low_unit,c.age_low_code,c.age_low_system,c.age_high,c.age_high_unit,c.age_high_code,c.age_high_system"
   )
 }
 
@@ -130,7 +141,8 @@ buildCodeSummaryStatisticsQuery <- function(ctes) {
 #'
 #' Distinct counts are never summed across detail chunks. The rare catalog carries
 #' aggregate group metadata only; all reference-range dimensions participate in matching.
-buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL, events = "scoped_events", clinical_cases_only = FALSE) {
+buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL, events = "scoped_events", clinical_cases_only = FALSE,
+                                         share_observation_totals = FALSE) {
   from <- paste0(" FROM ", events, " e")
   if (mode == "rare") {
     dimensions <- c("report_scope", "report", "system", "coding_path", "version", "code", "unit", "unit_system", "low", "high", "range_type", "range_type_system", "age_low", "age_low_unit", "age_low_code", "age_low_system", "age_high", "age_high_unit", "age_high_code", "age_high_system")
@@ -152,7 +164,7 @@ buildCodeSummaryCompactQuery <- function(ctes, mode, rare_groups = NULL, events 
     "NULL::text AS version,NULL::text AS code,NULL::text AS unit,NULL::text AS unit_system,NULL::text AS low,NULL::text AS high,NULL::text AS range_type,NULL::text AS range_type_system,NULL::text AS age_low,NULL::text AS age_low_unit,NULL::text AS age_low_code,NULL::text AS age_low_system,NULL::text AS age_high,NULL::text AS age_high_unit,NULL::text AS age_high_code,NULL::text AS age_high_system,",
     "e.count_key,e.event_key,e.kind,e.pid,e.case_id,e.unreferenced_medication", from, ")"
   ), buildCodeSummaryCountsCte(clinical_cases_only))
-  buildCodeSummaryResultQuery(ctes)
+  buildCodeSummaryResultQuery(ctes, share_observation_totals = share_observation_totals)
 }
 
 #' Count every complete detail group once for both output targets
@@ -201,7 +213,7 @@ codeSummaryReferenceRangeColumns <- function() {
 }
 
 # Remove grouping dimensions before deduplicating resource IDs and measurements.
-buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, clinical_cases_only = FALSE) {
+buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, clinical_cases_only = FALSE, observation_only = FALSE) {
   ranges <- codeSummaryReferenceRangeColumns()
   range_projection <- paste0("CASE WHEN report <> 'Observation' THEN ", ranges, " END AS ", ranges, collapse = ",")
   ctes <- c(ctes, paste0(
@@ -213,13 +225,22 @@ buildCodeSummaryNoVersionQuery <- function(ctes, mode, measurements, clinical_ca
   detail <- function(events) {
     buildCodeSummaryDetailQuery(character(), measurements && mode %in% c("combined", "details_statistics"), events, clinical_cases_only)
   }
-  totals <- function(events) buildCodeSummaryCompactQuery(character(), "totals", events = events, clinical_cases_only = clinical_cases_only)
   queries <- character()
   if (mode != "totals") {
     queries <- c(detail("scoped_events"), detail("no_version_events"))
   }
   if (mode %in% c("combined", "totals")) {
-    queries <- c(queries, totals("scoped_events"), totals("no_version_events"))
+    # Observation keeps the same resource key in both exports. Its totals
+    # already group across versions, ranges and all codes of each system.
+    queries <- c(queries, buildCodeSummaryCompactQuery(character(), "totals",
+      clinical_cases_only = clinical_cases_only, share_observation_totals = TRUE
+    ))
+    if (!observation_only) {
+      queries <- c(queries, buildCodeSummaryCompactQuery(character(), "totals",
+        events = "(SELECT * FROM no_version_events WHERE report <> 'Observation_no_version')",
+        clinical_cases_only = clinical_cases_only
+      ))
+    }
   }
   paste0(
     "/* INTERPOLAR DQA shared summary with version-independent counts */\nWITH ",

@@ -88,6 +88,9 @@ test_that("CSV variants are selected before aggregation and written to the exist
         data.table::fread(file.path(output, "Codes_no_version", paste0(resource, "_", scope, "_no_version.csv")))
       }
       observation <- readCompact("Observation")
+      detailed <- data.table::fread(file.path(output, "Codes", paste0("Observation_", scope, ".csv")))
+      count_columns <- c("system", "count", "patient_count", "case_count", "no_case_count")
+      expect_equal(observation[row_type == "total", ..count_columns], detailed[row_type == "total", ..count_columns])
       expect_named(observation, setdiff(names(reports$Observation), c("version", codeSummaryReferenceRangeColumns())))
       same_unit <- observation[code == "rollup" & unit_system == "http://unitsofmeasure.org"]
       expect_setequal(same_unit$system, c("http://loinc.org", "http://snomed.info/sct"))
