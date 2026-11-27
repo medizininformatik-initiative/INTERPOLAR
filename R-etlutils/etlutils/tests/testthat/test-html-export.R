@@ -16,9 +16,11 @@ test_that("single-file export retains complete widget data and dependencies", {
   baseline <- file.path(output_dir, "baseline.html")
   htmlwidgets::saveWidget(widget, baseline, selfcontained = FALSE)
   output <- file.path(output_dir, "single.html")
-  saveHtmlWidgetPage(widget, output, "Complete table")
+  title <- "Größe & Qualität <2026>"
+  saveHtmlWidgetPage(widget, output, title)
 
   document <- xml2::read_html(output)
+  expect_identical(xml2::xml_text(xml2::xml_find_all(document, "//title")), title)
   payload <- xml2::xml_text(xml2::xml_find_first(document, "//script[@data-for='full-table']"))
   expected <- xml2::xml_text(xml2::xml_find_first(
     xml2::read_html(baseline),
@@ -41,9 +43,10 @@ test_that("large payloads never enter Pandoc", {
   output_dir <- withr::local_tempdir()
   original_convert <- rmarkdown::pandoc_convert
   testthat::local_mocked_bindings(
-    pandoc_convert = function(input, ...) {
+    pandoc_convert = function(input, ..., options) {
       stopifnot(file.info(input)$size < 10000)
-      original_convert(input, ...)
+      expect_identical(options[match("--metadata", options) + 1L], "pagetitle=Large payload")
+      original_convert(input, ..., options = options)
     }, .package = "rmarkdown"
   )
   value <- strrep("x", 11000000L)
